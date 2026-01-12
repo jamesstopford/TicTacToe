@@ -36,6 +36,18 @@
             </div>
         </section>
 
+        <section class="difficulty-selector" aria-label="AI difficulty selection">
+            <span class="difficulty-label">DIFFICULTY</span>
+            <div class="difficulty-buttons" role="radiogroup" aria-label="Select AI difficulty">
+                <button class="difficulty-btn" id="difficulty-easy" data-difficulty="easy" role="radio" aria-checked="false">
+                    EASY
+                </button>
+                <button class="difficulty-btn active" id="difficulty-hard" data-difficulty="hard" role="radio" aria-checked="true">
+                    HARD
+                </button>
+            </div>
+        </section>
+
         <section class="game-board-container" aria-label="Game board">
             <div class="game-board" id="game-board" role="grid" aria-label="TicTacToe game board">
                 <button class="cell" data-index="0" aria-label="Cell 1, empty" tabindex="0"></button>

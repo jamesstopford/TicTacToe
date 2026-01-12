@@ -58,7 +58,11 @@ const UI = (function() {
             // Reset Modal
             resetModalOverlay: document.getElementById('reset-modal-overlay'),
             resetConfirmBtn: document.getElementById('reset-confirm-btn'),
-            resetCancelBtn: document.getElementById('reset-cancel-btn')
+            resetCancelBtn: document.getElementById('reset-cancel-btn'),
+
+            // Difficulty Selector
+            difficultyEasyBtn: document.getElementById('difficulty-easy'),
+            difficultyHardBtn: document.getElementById('difficulty-hard')
         };
     }
 
@@ -185,6 +189,25 @@ const UI = (function() {
             'aria-label',
             enabled ? 'Mute sound' : 'Unmute sound'
         );
+    }
+
+    /**
+     * Updates the difficulty selector buttons to reflect current difficulty
+     * @param {string} difficulty - Current difficulty ('easy' or 'hard')
+     */
+    function updateDifficultyButtons(difficulty) {
+        // Update easy button
+        if (difficulty === 'easy') {
+            elements.difficultyEasyBtn.classList.add('active');
+            elements.difficultyEasyBtn.setAttribute('aria-checked', 'true');
+            elements.difficultyHardBtn.classList.remove('active');
+            elements.difficultyHardBtn.setAttribute('aria-checked', 'false');
+        } else {
+            elements.difficultyEasyBtn.classList.remove('active');
+            elements.difficultyEasyBtn.setAttribute('aria-checked', 'false');
+            elements.difficultyHardBtn.classList.add('active');
+            elements.difficultyHardBtn.setAttribute('aria-checked', 'true');
+        }
     }
 
     /**
@@ -407,6 +430,19 @@ const UI = (function() {
                 handlers.onResetCancel();
             }
         });
+
+        // Difficulty selector buttons
+        elements.difficultyEasyBtn.addEventListener('click', () => {
+            if (handlers.onDifficultyChange) {
+                handlers.onDifficultyChange('easy');
+            }
+        });
+
+        elements.difficultyHardBtn.addEventListener('click', () => {
+            if (handlers.onDifficultyChange) {
+                handlers.onDifficultyChange('hard');
+            }
+        });
     }
 
     /**
@@ -428,6 +464,7 @@ const UI = (function() {
         showAIThinking,
         updateScores,
         updateSoundButton,
+        updateDifficultyButtons,
         highlightWinningCells,
         drawWinningLine,
         clearWinningLine,
