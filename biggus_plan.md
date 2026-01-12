@@ -146,9 +146,53 @@ TicTacToe/
 └── README.md               [TODO]
 ```
 
+## Phase 7: New Features (Enhancement)
+
+### Feature 7.1: Easy Mode AI Difficulty - TODO
+**Priority:** High
+**Description:** Add an easy mode AI difficulty option that makes random moves instead of using minimax, allowing casual players to win.
+
+**Requirements:**
+- Add difficulty selector UI (toggle or buttons for Easy/Hard modes)
+- Implement easy AI that makes random valid moves
+- Keep existing minimax AI as "Hard" mode
+- Persist difficulty preference to localStorage
+- Update UI to show current difficulty level
+- Add tests for easy mode AI behavior
+
+**Acceptance Criteria:**
+- Player can select between Easy and Hard difficulty
+- Easy mode AI makes random moves (player can win)
+- Hard mode AI remains unbeatable (existing behavior)
+- Difficulty selection persists across browser sessions
+- Tests verify both AI modes work correctly
+
+### Feature 7.2: Player Symbol Selection (X/O/Random) - COMPLETED
+**Priority:** High
+**Description:** Allow player to choose whether they want to play as X or O, or randomly assign symbols.
+
+**Requirements:**
+- [x] Add symbol selection UI (X, O, or Random buttons/toggle)
+- [x] Update game initialization to respect player's symbol choice
+- [x] When player chooses X, player goes first (X always goes first in tic-tac-toe)
+- [x] When player chooses O, AI goes first
+- [x] When Random is selected, randomly assign X or O to player
+- [x] Update UI to clearly indicate which symbol is the player vs AI
+- [x] Persist symbol preference to localStorage
+- [x] Update turn indicator to show "Your turn" vs "AI's turn" instead of X/O
+
+**Acceptance Criteria:**
+- [x] Player can select X, O, or Random before game starts
+- [x] Game correctly assigns symbols and determines who goes first
+- [x] UI clearly indicates player symbol vs AI symbol
+- [x] Random selection works correctly (50/50)
+- [x] Symbol preference persists across sessions
+- [x] Tests verify all symbol assignment scenarios
+
 ## Current Status
-- **In Progress:** PR creation
-- **Completed:** All 6 phases, comprehensive tests
+- **In Progress:** None
+- **Completed:** All 6 phases (MVP complete), comprehensive tests, Feature 7.2 (Symbol Selection)
+- **Next Up:** Feature 7.1 (Easy Mode)
 - **Blocked:** None
 
 ## Discovered Issues

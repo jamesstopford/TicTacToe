@@ -11,7 +11,8 @@ const Storage = (function() {
     const KEYS = {
         SCORES: 'tictactoe_scores',
         SOUND_ENABLED: 'tictactoe_sound_enabled',
-        DIFFICULTY: 'tictactoe_difficulty'
+        DIFFICULTY: 'tictactoe_difficulty',
+        PLAYER_SYMBOL: 'tictactoe_player_symbol'
     };
 
     // Difficulty levels
@@ -21,6 +22,15 @@ const Storage = (function() {
     };
 
     const DEFAULT_DIFFICULTY = DIFFICULTY.HARD;
+
+    // Player symbol choices
+    const SYMBOL_CHOICE = {
+        X: 'X',
+        O: 'O',
+        RANDOM: 'random'
+    };
+
+    const DEFAULT_SYMBOL_CHOICE = SYMBOL_CHOICE.RANDOM;
 
     // Default values
     const DEFAULT_SCORES = {
@@ -204,6 +214,38 @@ const Storage = (function() {
     }
 
     /**
+     * Loads player symbol choice from localStorage
+     * @returns {string} Symbol choice ('X', 'O', or 'random')
+     */
+    function loadPlayerSymbol() {
+        const value = getItem(KEYS.PLAYER_SYMBOL, null);
+
+        // Validate that the value is a valid symbol choice
+        if (value === SYMBOL_CHOICE.X ||
+            value === SYMBOL_CHOICE.O ||
+            value === SYMBOL_CHOICE.RANDOM) {
+            return value;
+        }
+
+        return DEFAULT_SYMBOL_CHOICE;
+    }
+
+    /**
+     * Saves player symbol choice to localStorage
+     * @param {string} symbol - Symbol choice ('X', 'O', or 'random')
+     * @returns {boolean} True if save was successful
+     */
+    function savePlayerSymbol(symbol) {
+        // Validate input - only accept valid symbol choice values
+        if (symbol !== SYMBOL_CHOICE.X &&
+            symbol !== SYMBOL_CHOICE.O &&
+            symbol !== SYMBOL_CHOICE.RANDOM) {
+            return false;
+        }
+        return setItem(KEYS.PLAYER_SYMBOL, symbol);
+    }
+
+    /**
      * Checks if storage is available
      * @returns {boolean} True if localStorage is functional
      */
@@ -223,8 +265,11 @@ const Storage = (function() {
         saveSoundEnabled,
         loadDifficulty,
         saveDifficulty,
+        loadPlayerSymbol,
+        savePlayerSymbol,
         isAvailable,
-        DIFFICULTY
+        DIFFICULTY,
+        SYMBOL_CHOICE
     };
 })();
 
