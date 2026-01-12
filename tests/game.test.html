@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe - Game Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #00ffff;
+        }
+        h2 {
+            color: #ff00ff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .test-pass {
+            background: rgba(0, 255, 0, 0.1);
+            border-left: 4px solid #00ff00;
+        }
+        .test-fail {
+            background: rgba(255, 0, 0, 0.1);
+            border-left: 4px solid #ff3333;
+        }
+        .summary {
+            padding: 20px;
+            margin-top: 20px;
+            background: #12121a;
+            border-radius: 4px;
+        }
+        .summary.all-pass {
+            border: 2px solid #00ff00;
+        }
+        .summary.has-failures {
+            border: 2px solid #ff3333;
+        }
+        .stats {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>TicTacToe Test Suite</h1>
+    <div id="test-results"></div>
+    <div id="summary" class="summary"></div>
+
+    <!-- Load game modules -->
+    <script src="../js/storage.js"></script>
+    <script src="../js/game.js"></script>
+    <script src="../js/ai.js"></script>
+
+    <script>
+        // Simple test framework
+        const TestRunner = {
+            results: [],
+            currentSuite: '',
+
+            suite(name) {
+                this.currentSuite = name;
+            },
+
+            test(description, fn) {
+                try {
+                    fn();
+                    this.results.push({
+                        suite: this.currentSuite,
+                        description,
+                        passed: true
+                    });
+                } catch (error) {
+                    this.results.push({
+                        suite: this.currentSuite,
+                        description,
+                        passed: false,
+                        error: error.message
+                    });
+                }
+            },
+
+            assertEqual(actual, expected, message = '') {
+                if (actual !== expected) {
+                    throw new Error(
+                        `${message ? message + ': ' : ''}Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+                    );
+                }
+            },
+
+            assertDeepEqual(actual, expected, message = '') {
+                if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                    throw new Error(
+                        `${message ? message + ': ' : ''}Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+                    );
+                }
+            },
+
+            assertTrue(value, message = '') {
+                if (!value) {
+                    throw new Error(message || 'Expected true, got false');
+                }
+            },
+
+            assertFalse(value, message = '') {
+                if (value) {
+                    throw new Error(message || 'Expected false, got true');
+                }
+            },
+
+            assertNotNull(value, message = '') {
+                if (value === null || value === undefined) {
+                    throw new Error(message || 'Expected non-null value');
+                }
+            },
+
+            render() {
+                const container = document.getElementById('test-results');
+                const summary = document.getElementById('summary');
+
+                // Group by suite
+                const suites = {};
+                this.results.forEach(r => {
+                    if (!suites[r.suite]) {
+                        suites[r.suite] = [];
+                    }
+                    suites[r.suite].push(r);
+                });
+
+                // Render results
+                let html = '';
+                for (const [suite, tests] of Object.entries(suites)) {
+                    html += `<h2>${suite}</h2>`;
+                    tests.forEach(t => {
+                        const status = t.passed ? 'pass' : 'fail';
+                        const icon = t.passed ? '✓' : '✗';
+                        html += `<div class="test-result test-${status}">
+                            <strong>${icon}</strong> ${t.description}
+                            ${t.error ? `<br><code>${t.error}</code>` : ''}
+                        </div>`;
+                    });
+                }
+                container.innerHTML = html;
+
+                // Render summary
+                const passed = this.results.filter(r => r.passed).length;
+                const failed = this.results.filter(r => !r.passed).length;
+                const total = this.results.length;
+
+                summary.className = `summary ${failed > 0 ? 'has-failures' : 'all-pass'}`;
+                summary.innerHTML = `
+                    <div class="stats">
+                        <strong>Results:</strong> ${passed}/${total} tests passed
+                    </div>
+                    ${failed > 0 ? `<div style="color: #ff3333">${failed} test(s) failed</div>` : '<div style="color: #00ff00">All tests passed!</div>'}
+                `;
+            }
+        };
+
+        // Aliases for convenience
+        const { suite, test, assertEqual, assertDeepEqual, assertTrue, assertFalse, assertNotNull } = TestRunner;
+
+        // ============================================================
+        // GAME MODULE TESTS
+        // ============================================================
+
+        TestRunner.suite('Game Module - Initialization');
+
+        TestRunner.test('Game initializes with empty board', () => {
+            Game.init();
+            const state = Game.getState();
+            TestRunner.assertDeepEqual(state.board, ['', '', '', '', '', '', '', '', '']);
+        });
+
+        TestRunner.test('Game starts with player X by default', () => {
+            Game.init(false);
+            TestRunner.assertEqual(Game.getCurrentPlayer(), 'X');
+        });
+
+        TestRunner.test('Game can start with AI (O) first', () => {
+            Game.init(true);
+            TestRunner.assertEqual(Game.getCurrentPlayer(), 'O');
+        });
+
+        TestRunner.test('Game is not over at start', () => {
+            Game.init();
+            TestRunner.assertFalse(Game.isGameOver());
+        });
+
+        // ============================================================
+
+        TestRunner.suite('Game Module - Move Handling');
+
+        TestRunner.test('Valid move is accepted', () => {
+            Game.init();
+            const result = Game.makeMove(0);
+            TestRunner.assertTrue(result);
+        });
+
+        TestRunner.test('Move places correct mark on board', () => {
+            Game.init();
+            Game.makeMove(4);
+            const board = Game.getBoard();
+            TestRunner.assertEqual(board[4], 'X');
+        });
+
+        TestRunner.test('Player switches after move', () => {
+            Game.init();
+            Game.makeMove(0);
+            TestRunner.assertEqual(Game.getCurrentPlayer(), 'O');
+        });
+
+        TestRunner.test('Invalid move to occupied cell is rejected', () => {
+            Game.init();
+            Game.makeMove(0);
+            const result = Game.makeMove(0);
+            TestRunner.assertFalse(result);
+        });
+
+        TestRunner.test('Invalid move out of bounds is rejected', () => {
+            Game.init();
+            TestRunner.assertFalse(Game.isValidMove(-1));
+            TestRunner.assertFalse(Game.isValidMove(9));
+        });
+
+        TestRunner.test('getAvailableMoves returns empty cells', () => {
+            Game.init();
+            Game.makeMove(0);
+            Game.makeMove(4);
+            const available = Game.getAvailableMoves();
+            TestRunner.assertEqual(available.length, 7);
+            TestRunner.assertFalse(available.includes(0));
+            TestRunner.assertFalse(available.includes(4));
+        });
+
+        // ============================================================
+
+        TestRunner.suite('Game Module - Win Detection');
+
+        TestRunner.test('Detects horizontal win (top row)', () => {
+            Game.init();
+            // X | X | X
+            // O | O | -
+            // - | - | -
+            Game.makeMove(0); // X
+            Game.makeMove(3); // O
+            Game.makeMove(1); // X
+            Game.makeMove(4); // O
+            Game.makeMove(2); // X wins
+            const state = Game.getState();
+            TestRunner.assertTrue(state.gameOver);
+            TestRunner.assertEqual(state.winner, 'X');
+            TestRunner.assertDeepEqual(state.winningLine, [0, 1, 2]);
+        });
+
+        TestRunner.test('Detects horizontal win (middle row)', () => {
+            Game.init();
+            // X | - | -
+            // O | O | O
+            // X | X | -
+            Game.makeMove(0); // X
+            Game.makeMove(3); // O
+            Game.makeMove(6); // X
+            Game.makeMove(4); // O
+            Game.makeMove(7); // X
+            Game.makeMove(5); // O wins
+            const state = Game.getState();
+            TestRunner.assertTrue(state.gameOver);
+            TestRunner.assertEqual(state.winner, 'O');
+            TestRunner.assertDeepEqual(state.winningLine, [3, 4, 5]);
+        });
+
+        TestRunner.test('Detects vertical win (left column)', () => {
+            Game.init();
+            // X | O | -
+            // X | O | -
+            // X | - | -
+            Game.makeMove(0); // X
+            Game.makeMove(1); // O
+            Game.makeMove(3); // X
+            Game.makeMove(4); // O
+            Game.makeMove(6); // X wins
+            const state = Game.getState();
+            TestRunner.assertTrue(state.gameOver);
+            TestRunner.assertEqual(state.winner, 'X');
+            TestRunner.assertDeepEqual(state.winningLine, [0, 3, 6]);
+        });
+
+        TestRunner.test('Detects diagonal win (top-left to bottom-right)', () => {
+            Game.init();
+            // X | O | -
+            // O | X | -
+            // - | - | X
+            Game.makeMove(0); // X
+            Game.makeMove(1); // O
+            Game.makeMove(4); // X
+            Game.makeMove(3); // O
+            Game.makeMove(8); // X wins
+            const state = Game.getState();
+            TestRunner.assertTrue(state.gameOver);
+            TestRunner.assertEqual(state.winner, 'X');
+            TestRunner.assertDeepEqual(state.winningLine, [0, 4, 8]);
+        });
+
+        TestRunner.test('Detects diagonal win (top-right to bottom-left)', () => {
+            Game.init();
+            // O | - | X
+            // O | X | -
+            // X | - | -
+            Game.makeMove(2); // X
+            Game.makeMove(0); // O
+            Game.makeMove(4); // X
+            Game.makeMove(3); // O
+            Game.makeMove(6); // X wins
+            const state = Game.getState();
+            TestRunner.assertTrue(state.gameOver);
+            TestRunner.assertEqual(state.winner, 'X');
+            TestRunner.assertDeepEqual(state.winningLine, [2, 4, 6]);
+        });
+
+        // ============================================================
+
+        TestRunner.suite('Game Module - Draw Detection');
+
+        TestRunner.test('Detects draw when board is full', () => {
+            Game.init();
+            // X | O | X
+            // X | O | O
+            // O | X | X
+            Game.makeMove(0); // X
+            Game.makeMove(1); // O
+            Game.makeMove(2); // X
+            Game.makeMove(4); // O
+            Game.makeMove(3); // X
+            Game.makeMove(5); // O
+            Game.makeMove(7); // X
+            Game.makeMove(6); // O
+            Game.makeMove(8); // X - Draw
+            const state = Game.getState();
+            TestRunner.assertTrue(state.gameOver);
+            TestRunner.assertEqual(state.winner, 'draw');
+            TestRunner.assertEqual(state.winningLine, null);
+        });
+
+        // ============================================================
+        // AI MODULE TESTS
+        // ============================================================
+
+        TestRunner.suite('AI Module - Basic Functionality');
+
+        TestRunner.test('AI returns a valid move', () => {
+            const board = ['', '', '', '', '', '', '', '', ''];
+            const move = AI.getMove(board);
+            TestRunner.assertTrue(move >= 0 && move <= 8);
+        });
+
+        TestRunner.test('AI returns null when no moves available', () => {
+            const board = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X'];
+            const move = AI.getMove(board);
+            TestRunner.assertEqual(move, null);
+        });
+
+        TestRunner.test('AI chooses winning move when available', () => {
+            // O | O | -
+            // X | X | -
+            // - | - | -
+            const board = ['O', 'O', '', 'X', 'X', '', '', '', ''];
+            const move = AI.getMove(board);
+            TestRunner.assertEqual(move, 2); // AI should complete the win
+        });
+
+        TestRunner.test('AI blocks opponent winning move', () => {
+            // X | X | -
+            // O | - | -
+            // - | - | -
+            const board = ['X', 'X', '', 'O', '', '', '', '', ''];
+            const move = AI.getMove(board);
+            TestRunner.assertEqual(move, 2); // AI should block X from winning
+        });
+
+        // ============================================================
+
+        TestRunner.suite('AI Module - Unbeatable Verification');
+
+        TestRunner.test('AI never loses when going first (100 games)', () => {
+            let aiLosses = 0;
+
+            for (let game = 0; game < 100; game++) {
+                const board = ['', '', '', '', '', '', '', '', ''];
+                let currentPlayer = 'O'; // AI goes first
+
+                while (true) {
+                    if (currentPlayer === 'O') {
+                        const move = AI.getMove(board);
+                        if (move === null) break;
+                        board[move] = 'O';
+                    } else {
+                        // Human makes random move
+                        const empty = [];
+                        for (let i = 0; i < 9; i++) {
+                            if (board[i] === '') empty.push(i);
+                        }
+                        if (empty.length === 0) break;
+                        const randomMove = empty[Math.floor(Math.random() * empty.length)];
+                        board[randomMove] = 'X';
+                    }
+
+                    // Check for winner
+                    const winner = AI.checkWinner(board);
+                    if (winner === 'X') {
+                        aiLosses++;
+                        break;
+                    }
+                    if (winner === 'O' || AI.isBoardFull(board)) {
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'O' ? 'X' : 'O';
+                }
+            }
+
+            TestRunner.assertEqual(aiLosses, 0, 'AI should never lose');
+        });
+
+        TestRunner.test('AI never loses when going second (100 games)', () => {
+            let aiLosses = 0;
+
+            for (let game = 0; game < 100; game++) {
+                const board = ['', '', '', '', '', '', '', '', ''];
+                let currentPlayer = 'X'; // Human goes first
+
+                while (true) {
+                    if (currentPlayer === 'O') {
+                        const move = AI.getMove(board);
+                        if (move === null) break;
+                        board[move] = 'O';
+                    } else {
+                        // Human makes random move
+                        const empty = [];
+                        for (let i = 0; i < 9; i++) {
+                            if (board[i] === '') empty.push(i);
+                        }
+                        if (empty.length === 0) break;
+                        const randomMove = empty[Math.floor(Math.random() * empty.length)];
+                        board[randomMove] = 'X';
+                    }
+
+                    // Check for winner
+                    const winner = AI.checkWinner(board);
+                    if (winner === 'X') {
+                        aiLosses++;
+                        break;
+                    }
+                    if (winner === 'O' || AI.isBoardFull(board)) {
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'O' ? 'X' : 'O';
+                }
+            }
+
+            TestRunner.assertEqual(aiLosses, 0, 'AI should never lose');
+        });
+
+        // ============================================================
+
+        TestRunner.suite('AI Module - Minimax Scoring');
+
+        TestRunner.test('Minimax returns positive score for AI win', () => {
+            // O | O | O
+            // X | X | -
+            // - | - | -
+            const board = ['O', 'O', 'O', 'X', 'X', '', '', '', ''];
+            const winner = AI.checkWinner(board);
+            TestRunner.assertEqual(winner, 'O');
+        });
+
+        TestRunner.test('Minimax returns negative score for human win', () => {
+            // X | X | X
+            // O | O | -
+            // - | - | -
+            const board = ['X', 'X', 'X', 'O', 'O', '', '', '', ''];
+            const winner = AI.checkWinner(board);
+            TestRunner.assertEqual(winner, 'X');
+        });
+
+        // ============================================================
+
+        TestRunner.suite('Storage Module');
+
+        TestRunner.test('Storage loads default scores when none saved', () => {
+            // Clear storage
+            localStorage.removeItem('tictactoe_scores');
+            const scores = Storage.loadScores();
+            TestRunner.assertEqual(scores.wins, 0);
+            TestRunner.assertEqual(scores.losses, 0);
+            TestRunner.assertEqual(scores.draws, 0);
+        });
+
+        TestRunner.test('Storage saves and loads scores correctly', () => {
+            const testScores = { wins: 5, losses: 3, draws: 2 };
+            Storage.saveScores(testScores);
+            const loaded = Storage.loadScores();
+            TestRunner.assertEqual(loaded.wins, 5);
+            TestRunner.assertEqual(loaded.losses, 3);
+            TestRunner.assertEqual(loaded.draws, 2);
+        });
+
+        TestRunner.test('Storage resets scores to zero', () => {
+            Storage.saveScores({ wins: 10, losses: 10, draws: 10 });
+            const reset = Storage.resetScores();
+            TestRunner.assertEqual(reset.wins, 0);
+            TestRunner.assertEqual(reset.losses, 0);
+            TestRunner.assertEqual(reset.draws, 0);
+        });
+
+        TestRunner.test('Storage saves and loads sound preference', () => {
+            Storage.saveSoundEnabled(false);
+            TestRunner.assertFalse(Storage.loadSoundEnabled());
+
+            Storage.saveSoundEnabled(true);
+            TestRunner.assertTrue(Storage.loadSoundEnabled());
+        });
+
+        // ============================================================
+
+        // Run and render all tests
+        TestRunner.render();
+    </script>
+</body>
+</html>
