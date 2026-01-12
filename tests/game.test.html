@@ -721,6 +721,229 @@
 
         // ============================================================
 
+        TestRunner.suite('Storage Module - Player Symbol');
+
+        TestRunner.test('Storage loads default player symbol as random when none saved', () => {
+            localStorage.removeItem('tictactoe_player_symbol');
+            const symbol = Storage.loadPlayerSymbol();
+            TestRunner.assertEqual(symbol, 'random');
+        });
+
+        TestRunner.test('Storage saves and loads X symbol correctly', () => {
+            Storage.savePlayerSymbol('X');
+            const loaded = Storage.loadPlayerSymbol();
+            TestRunner.assertEqual(loaded, 'X');
+        });
+
+        TestRunner.test('Storage saves and loads O symbol correctly', () => {
+            Storage.savePlayerSymbol('O');
+            const loaded = Storage.loadPlayerSymbol();
+            TestRunner.assertEqual(loaded, 'O');
+        });
+
+        TestRunner.test('Storage saves and loads random symbol correctly', () => {
+            Storage.savePlayerSymbol('random');
+            const loaded = Storage.loadPlayerSymbol();
+            TestRunner.assertEqual(loaded, 'random');
+        });
+
+        TestRunner.test('Storage rejects invalid symbol values', () => {
+            // First set a valid value
+            Storage.savePlayerSymbol('X');
+
+            // Try to save invalid value - should return false
+            const result = Storage.savePlayerSymbol('invalid');
+            TestRunner.assertFalse(result);
+
+            // Value should remain 'X' since invalid was rejected
+            TestRunner.assertEqual(Storage.loadPlayerSymbol(), 'X');
+        });
+
+        TestRunner.test('Storage SYMBOL_CHOICE constants are exposed', () => {
+            TestRunner.assertEqual(Storage.SYMBOL_CHOICE.X, 'X');
+            TestRunner.assertEqual(Storage.SYMBOL_CHOICE.O, 'O');
+            TestRunner.assertEqual(Storage.SYMBOL_CHOICE.RANDOM, 'random');
+        });
+
+        // ============================================================
+
+        TestRunner.suite('Game Module - Player Symbol');
+
+        TestRunner.test('Game initializes with player as X by default', () => {
+            Game.init();
+            TestRunner.assertEqual(Game.getPlayerSymbol(), 'X');
+            TestRunner.assertEqual(Game.getAISymbol(), 'O');
+        });
+
+        TestRunner.test('Game initializes with player as O when specified', () => {
+            Game.init('O');
+            TestRunner.assertEqual(Game.getPlayerSymbol(), 'O');
+            TestRunner.assertEqual(Game.getAISymbol(), 'X');
+        });
+
+        TestRunner.test('Game state includes playerSymbol and aiSymbol', () => {
+            Game.init('O');
+            const state = Game.getState();
+            TestRunner.assertEqual(state.playerSymbol, 'O');
+            TestRunner.assertEqual(state.aiSymbol, 'X');
+        });
+
+        TestRunner.test('X always goes first regardless of player symbol', () => {
+            // When player is X
+            Game.init('X');
+            TestRunner.assertEqual(Game.getCurrentPlayer(), 'X');
+            TestRunner.assertTrue(Game.isPlayerTurn());
+            TestRunner.assertFalse(Game.isAITurn());
+
+            // When player is O (AI is X)
+            Game.init('O');
+            TestRunner.assertEqual(Game.getCurrentPlayer(), 'X');
+            TestRunner.assertFalse(Game.isPlayerTurn());  // It's AI's turn (X)
+            TestRunner.assertTrue(Game.isAITurn());
+        });
+
+        TestRunner.test('isPlayerTurn works correctly when player is O', () => {
+            Game.init('O');
+            // X goes first, so AI (X) goes first
+            TestRunner.assertFalse(Game.isPlayerTurn());
+            TestRunner.assertTrue(Game.isAITurn());
+
+            // Make a move as X (AI)
+            Game.makeMove(0);
+            // Now it should be O's (player's) turn
+            TestRunner.assertTrue(Game.isPlayerTurn());
+            TestRunner.assertFalse(Game.isAITurn());
+        });
+
+        TestRunner.test('Game handles invalid playerSymbol gracefully', () => {
+            Game.init('invalid');
+            // Should default to X
+            TestRunner.assertEqual(Game.getPlayerSymbol(), 'X');
+            TestRunner.assertEqual(Game.getAISymbol(), 'O');
+        });
+
+        // ============================================================
+
+        TestRunner.suite('AI Module - Playing as X');
+
+        TestRunner.test('findBestMoveForSymbol works for O (default behavior)', () => {
+            const board = ['O', 'O', '', 'X', 'X', '', '', '', ''];
+            const move = AI.findBestMoveForSymbol(board, 'O');
+            TestRunner.assertEqual(move, 2); // Complete the win
+        });
+
+        TestRunner.test('findBestMoveForSymbol works for X', () => {
+            // X | X | -
+            // O | O | -
+            // - | - | -
+            const board = ['X', 'X', '', 'O', 'O', '', '', '', ''];
+            const move = AI.findBestMoveForSymbol(board, 'X');
+            TestRunner.assertEqual(move, 2); // X should complete the win at position 2
+        });
+
+        TestRunner.test('AI as X blocks opponent winning move', () => {
+            // O | O | -
+            // X | - | -
+            // - | - | -
+            const board = ['O', 'O', '', 'X', '', '', '', '', ''];
+            const move = AI.findBestMoveForSymbol(board, 'X');
+            TestRunner.assertEqual(move, 2); // X should block O from winning
+        });
+
+        TestRunner.test('AI as X never loses when going first (50 games)', () => {
+            let aiLosses = 0;
+
+            for (let game = 0; game < 50; game++) {
+                const board = ['', '', '', '', '', '', '', '', ''];
+                let currentPlayer = 'X';  // AI (X) goes first
+
+                while (true) {
+                    if (currentPlayer === 'X') {
+                        // AI plays as X using findBestMoveForSymbol
+                        const move = AI.findBestMoveForSymbol(board, 'X');
+                        if (move === null) break;
+                        board[move] = 'X';
+                    } else {
+                        // Human (O) makes random move
+                        const empty = [];
+                        for (let i = 0; i < 9; i++) {
+                            if (board[i] === '') empty.push(i);
+                        }
+                        if (empty.length === 0) break;
+                        const randomMove = empty[Math.floor(Math.random() * empty.length)];
+                        board[randomMove] = 'O';
+                    }
+
+                    const winner = AI.checkWinner(board);
+                    if (winner === 'O') {
+                        aiLosses++;
+                        break;
+                    }
+                    if (winner === 'X' || AI.isBoardFull(board)) {
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+            }
+
+            TestRunner.assertEqual(aiLosses, 0, 'AI playing as X should never lose');
+        });
+
+        TestRunner.test('AI as X never loses when going second (50 games)', () => {
+            let aiLosses = 0;
+
+            for (let game = 0; game < 50; game++) {
+                const board = ['', '', '', '', '', '', '', '', ''];
+                let currentPlayer = 'O';  // Human (O) goes first... wait, X always goes first
+
+                // Actually in TicTacToe, X always goes first.
+                // If AI is X, AI goes first. Let's test AI as X going first,
+                // and human making the first random move after AI.
+                // Hmm, X always goes first in standard rules.
+
+                // Let's test the scenario where human (O) somehow gets to move first
+                // by having X already placed (simulating a mid-game state)
+                // Actually, let's just test AI as X not losing in various scenarios
+
+                // New approach: Human is O and moves first (non-standard but tests AI resilience)
+                currentPlayer = 'O';
+
+                while (true) {
+                    if (currentPlayer === 'O') {
+                        // Human (O) makes random move
+                        const empty = [];
+                        for (let i = 0; i < 9; i++) {
+                            if (board[i] === '') empty.push(i);
+                        }
+                        if (empty.length === 0) break;
+                        const randomMove = empty[Math.floor(Math.random() * empty.length)];
+                        board[randomMove] = 'O';
+                    } else {
+                        // AI plays as X
+                        const move = AI.findBestMoveForSymbol(board, 'X');
+                        if (move === null) break;
+                        board[move] = 'X';
+                    }
+
+                    const winner = AI.checkWinner(board);
+                    if (winner === 'O') {
+                        aiLosses++;
+                        break;
+                    }
+                    if (winner === 'X' || AI.isBoardFull(board)) {
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+            }
+
+            TestRunner.assertEqual(aiLosses, 0, 'AI playing as X should never lose even when O moves first');
+        });
+
+        // ============================================================
+
         // Run and render all tests
         TestRunner.render();
     </script>

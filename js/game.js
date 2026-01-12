@@ -30,7 +30,9 @@ const Game = (function() {
         currentPlayer: PLAYER_X,
         gameOver: false,
         winner: null,  // null, 'X', 'O', or 'draw'
-        winningLine: null  // null or [index, index, index]
+        winningLine: null,  // null or [index, index, index]
+        playerSymbol: PLAYER_X,  // Which symbol the human player is using
+        aiSymbol: PLAYER_O       // Which symbol the AI is using
     };
 
     // Event callbacks
@@ -39,25 +41,37 @@ const Game = (function() {
 
     /**
      * Creates a fresh game state
+     * @param {string} playerSymbol - The symbol the human player uses ('X' or 'O')
      * @returns {Object} New game state object
      */
-    function createInitialState() {
+    function createInitialState(playerSymbol = PLAYER_X) {
+        const aiSymbol = playerSymbol === PLAYER_X ? PLAYER_O : PLAYER_X;
         return {
             board: Array(9).fill(EMPTY),
-            currentPlayer: PLAYER_X,
+            currentPlayer: PLAYER_X,  // X always goes first in tic-tac-toe
             gameOver: false,
             winner: null,
-            winningLine: null
+            winningLine: null,
+            playerSymbol: playerSymbol,
+            aiSymbol: aiSymbol
         };
     }
 
     /**
      * Initializes or resets the game
-     * @param {boolean} aiFirst - If true, AI (O) plays first
+     * @param {string} playerSymbol - The symbol the human player uses ('X' or 'O'). Defaults to 'X'.
+     *                                When player is X, player goes first. When player is O, AI goes first.
      */
-    function init(aiFirst = false) {
-        state = createInitialState();
-        state.currentPlayer = aiFirst ? PLAYER_O : PLAYER_X;
+    function init(playerSymbol = PLAYER_X) {
+        // Validate playerSymbol
+        if (playerSymbol !== PLAYER_X && playerSymbol !== PLAYER_O) {
+            playerSymbol = PLAYER_X;
+        }
+
+        state = createInitialState(playerSymbol);
+        // X always goes first in tic-tac-toe, so currentPlayer is always X
+        // Whether that's the human or AI depends on playerSymbol
+        state.currentPlayer = PLAYER_X;
 
         notifyStateChange();
     }
@@ -156,7 +170,9 @@ const Game = (function() {
             currentPlayer: state.currentPlayer,
             gameOver: state.gameOver,
             winner: state.winner,
-            winningLine: state.winningLine ? [...state.winningLine] : null
+            winningLine: state.winningLine ? [...state.winningLine] : null,
+            playerSymbol: state.playerSymbol,
+            aiSymbol: state.aiSymbol
         };
     }
 
@@ -178,18 +194,34 @@ const Game = (function() {
 
     /**
      * Checks if it's currently the human player's turn
-     * @returns {boolean} True if it's player X's turn
+     * @returns {boolean} True if it's the human player's turn
      */
     function isPlayerTurn() {
-        return state.currentPlayer === PLAYER_X && !state.gameOver;
+        return state.currentPlayer === state.playerSymbol && !state.gameOver;
     }
 
     /**
      * Checks if it's currently the AI's turn
-     * @returns {boolean} True if it's player O's turn
+     * @returns {boolean} True if it's the AI's turn
      */
     function isAITurn() {
-        return state.currentPlayer === PLAYER_O && !state.gameOver;
+        return state.currentPlayer === state.aiSymbol && !state.gameOver;
+    }
+
+    /**
+     * Gets the symbol the human player is using
+     * @returns {string} 'X' or 'O'
+     */
+    function getPlayerSymbol() {
+        return state.playerSymbol;
+    }
+
+    /**
+     * Gets the symbol the AI is using
+     * @returns {string} 'X' or 'O'
+     */
+    function getAISymbol() {
+        return state.aiSymbol;
     }
 
     /**
@@ -266,6 +298,8 @@ const Game = (function() {
         getCurrentPlayer,
         isPlayerTurn,
         isAITurn,
+        getPlayerSymbol,
+        getAISymbol,
         isGameOver,
         getAvailableMoves,
         checkGameEnd,

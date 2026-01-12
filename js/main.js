@@ -11,6 +11,8 @@ const App = (function() {
     let scores = { wins: 0, losses: 0, draws: 0 };
     let soundEnabled = true;
     let difficulty = 'hard';  // 'easy' or 'hard'
+    let symbolChoice = 'random';  // 'X', 'O', or 'random'
+    let currentPlayerSymbol = 'X';  // The actual symbol for current game (resolved from symbolChoice)
     let isProcessingMove = false;
 
     // AI thinking delay (ms) for natural feel
@@ -27,6 +29,7 @@ const App = (function() {
         scores = Storage.loadScores();
         soundEnabled = Storage.loadSoundEnabled();
         difficulty = Storage.loadDifficulty();
+        symbolChoice = Storage.loadPlayerSymbol();
 
         // Initialize sound system
         await Sound.init(soundEnabled);
@@ -35,6 +38,7 @@ const App = (function() {
         UI.updateScores(scores);
         UI.updateSoundButton(soundEnabled);
         UI.updateDifficultyButtons(difficulty);
+        UI.updateSymbolButtons(symbolChoice);
 
         // Setup event handlers
         UI.setupEventListeners({
@@ -45,7 +49,8 @@ const App = (function() {
             onModalClose: handleModalClose,
             onResetConfirm: handleResetConfirm,
             onResetCancel: handleResetCancel,
-            onDifficultyChange: handleDifficultyChange
+            onDifficultyChange: handleDifficultyChange,
+            onSymbolChange: handleSymbolChange
         });
 
         // Set up game callbacks
@@ -57,20 +62,36 @@ const App = (function() {
     }
 
     /**
-     * Starts a new game with random first player
+     * Determines the player's symbol for the current game based on their choice
+     * @returns {string} 'X' or 'O'
+     */
+    function resolvePlayerSymbol() {
+        if (symbolChoice === 'random') {
+            // 50/50 chance for X or O
+            return Math.random() < 0.5 ? 'X' : 'O';
+        }
+        return symbolChoice;
+    }
+
+    /**
+     * Starts a new game with the player's chosen (or randomly assigned) symbol
      */
     function startNewGame() {
-        // Randomly decide who goes first (true = AI first)
-        const aiFirst = Math.random() < 0.5;
+        // Determine the player's symbol for this game
+        currentPlayerSymbol = resolvePlayerSymbol();
 
         // Reset board display
         UI.resetBoard();
 
-        // Initialize game state
-        Game.init(aiFirst);
+        // Initialize game state with the player's symbol
+        // Game.init now takes playerSymbol ('X' or 'O') instead of aiFirst boolean
+        Game.init(currentPlayerSymbol);
 
-        // If AI goes first, trigger AI move
-        if (aiFirst) {
+        // Update hint to show which symbol was assigned
+        UI.updateSymbolHintForGame(currentPlayerSymbol, symbolChoice);
+
+        // X always goes first. If player is O, that means AI (X) goes first.
+        if (currentPlayerSymbol === 'O') {
             triggerAIMove();
         }
     }
@@ -89,8 +110,8 @@ const App = (function() {
         if (Game.isValidMove(index)) {
             isProcessingMove = true;
 
-            // Play sound
-            Sound.play('placeX');
+            // Play sound based on player's symbol
+            Sound.play(currentPlayerSymbol === 'X' ? 'placeX' : 'placeO');
 
             // Make the move
             Game.makeMove(index);
@@ -112,15 +133,17 @@ const App = (function() {
         isProcessingMove = true;
 
         // Show thinking indicator
-        UI.showAIThinking();
+        UI.showAIThinking(currentPlayerSymbol);
         UI.disableBoard();
 
         // Get AI move with delay, respecting difficulty setting
+        // The AI module needs to know which symbol it's playing as
         const board = Game.getBoard();
-        const move = await AI.getMoveWithDifficultyAndDelay(board, AI_DELAY, difficulty);
+        const aiSymbol = Game.getAISymbol();
+        const move = await AI.getMoveWithDifficultyAndDelay(board, AI_DELAY, difficulty, aiSymbol);
 
-        // Play sound
-        Sound.play('placeO');
+        // Play sound based on AI's symbol
+        Sound.play(aiSymbol === 'X' ? 'placeX' : 'placeO');
 
         // Make the move
         if (move !== null) {
@@ -143,9 +166,9 @@ const App = (function() {
         // Update cell display
         UI.renderBoard(state.board);
 
-        // Update turn indicator
+        // Update turn indicator with player's symbol context
         if (!state.gameOver) {
-            UI.updateTurnIndicator(state.currentPlayer);
+            UI.updateTurnIndicator(state.currentPlayer, false, state.playerSymbol);
         }
     }
 
@@ -154,21 +177,23 @@ const App = (function() {
      * @param {Object} state - Final game state
      */
     function handleGameEnd(state) {
-        const { winner, winningLine } = state;
+        const { winner, winningLine, playerSymbol } = state;
 
         // Disable board
         UI.disableBoard();
 
-        // Update scores
-        if (winner === 'X') {
+        // Update scores based on who won relative to player's symbol
+        if (winner === playerSymbol) {
+            // Player won
             scores.wins++;
             Sound.play('victory');
-        } else if (winner === 'O') {
-            scores.losses++;
-            Sound.play('defeat');
-        } else {
+        } else if (winner === 'draw') {
             scores.draws++;
             Sound.play('draw');
+        } else {
+            // AI won
+            scores.losses++;
+            Sound.play('defeat');
         }
 
         // Save and display scores
@@ -183,7 +208,7 @@ const App = (function() {
 
         // Show result modal after animation
         setTimeout(() => {
-            UI.showResultModal(winner);
+            UI.showResultModal(winner, playerSymbol);
         }, 600);
     }
 
@@ -262,6 +287,31 @@ const App = (function() {
     }
 
     /**
+     * Handles symbol choice change
+     * @param {string} newSymbolChoice - The new symbol choice ('X', 'O', or 'random')
+     */
+    function handleSymbolChange(newSymbolChoice) {
+        // Only process if symbol choice is actually changing
+        if (newSymbolChoice === symbolChoice) {
+            return;
+        }
+
+        Sound.play('click');
+
+        // Update symbol choice state
+        symbolChoice = newSymbolChoice;
+
+        // Save preference
+        Storage.savePlayerSymbol(symbolChoice);
+
+        // Update UI
+        UI.updateSymbolButtons(symbolChoice);
+
+        // Start a new game with the new symbol
+        startNewGame();
+    }
+
+    /**
      * Handles result modal close
      */
     function handleModalClose() {
@@ -282,7 +332,9 @@ const App = (function() {
         startNewGame,
         getScores: () => ({ ...scores }),
         isSoundEnabled: () => soundEnabled,
-        getDifficulty: () => difficulty
+        getDifficulty: () => difficulty,
+        getSymbolChoice: () => symbolChoice,
+        getCurrentPlayerSymbol: () => currentPlayerSymbol
     };
 })();
 

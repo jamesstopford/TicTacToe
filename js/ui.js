@@ -62,7 +62,13 @@ const UI = (function() {
 
             // Difficulty Selector
             difficultyEasyBtn: document.getElementById('difficulty-easy'),
-            difficultyHardBtn: document.getElementById('difficulty-hard')
+            difficultyHardBtn: document.getElementById('difficulty-hard'),
+
+            // Symbol Selector
+            symbolXBtn: document.getElementById('symbol-x'),
+            symbolOBtn: document.getElementById('symbol-o'),
+            symbolRandomBtn: document.getElementById('symbol-random'),
+            symbolHint: document.getElementById('symbol-hint')
         };
     }
 
@@ -145,13 +151,17 @@ const UI = (function() {
 
     /**
      * Updates the turn indicator
-     * @param {string} currentPlayer - 'X' or 'O'
+     * @param {string} currentPlayer - 'X' or 'O' (which mark is about to be placed)
      * @param {boolean} isThinking - Whether AI is thinking
+     * @param {string} playerSymbol - The symbol the human player is using ('X' or 'O')
      */
-    function updateTurnIndicator(currentPlayer, isThinking = false) {
+    function updateTurnIndicator(currentPlayer, isThinking = false, playerSymbol = 'X') {
         elements.turnIndicator.classList.remove('player-turn', 'ai-turn');
 
-        if (currentPlayer === 'X') {
+        // Determine if it's the human player's turn based on their symbol
+        const isPlayersTurn = currentPlayer === playerSymbol;
+
+        if (isPlayersTurn) {
             elements.turnIndicator.classList.add('player-turn');
             elements.turnText.textContent = 'YOUR TURN';
             elements.thinkingDots.hidden = true;
@@ -164,9 +174,11 @@ const UI = (function() {
 
     /**
      * Shows the AI thinking indicator
+     * @param {string} playerSymbol - The symbol the human player is using ('X' or 'O')
      */
-    function showAIThinking() {
-        updateTurnIndicator('O', true);
+    function showAIThinking(playerSymbol = 'X') {
+        const aiSymbol = playerSymbol === 'X' ? 'O' : 'X';
+        updateTurnIndicator(aiSymbol, true, playerSymbol);
     }
 
     /**
@@ -207,6 +219,55 @@ const UI = (function() {
             elements.difficultyEasyBtn.setAttribute('aria-checked', 'false');
             elements.difficultyHardBtn.classList.add('active');
             elements.difficultyHardBtn.setAttribute('aria-checked', 'true');
+        }
+    }
+
+    /**
+     * Updates the symbol selector buttons to reflect current symbol choice
+     * @param {string} symbolChoice - Current symbol choice ('X', 'O', or 'random')
+     */
+    function updateSymbolButtons(symbolChoice) {
+        // Reset all buttons
+        elements.symbolXBtn.classList.remove('active');
+        elements.symbolXBtn.setAttribute('aria-checked', 'false');
+        elements.symbolOBtn.classList.remove('active');
+        elements.symbolOBtn.setAttribute('aria-checked', 'false');
+        elements.symbolRandomBtn.classList.remove('active');
+        elements.symbolRandomBtn.setAttribute('aria-checked', 'false');
+
+        // Activate selected button and update hint
+        if (symbolChoice === 'X') {
+            elements.symbolXBtn.classList.add('active');
+            elements.symbolXBtn.setAttribute('aria-checked', 'true');
+            elements.symbolHint.textContent = 'You go first';
+        } else if (symbolChoice === 'O') {
+            elements.symbolOBtn.classList.add('active');
+            elements.symbolOBtn.setAttribute('aria-checked', 'true');
+            elements.symbolHint.textContent = 'AI goes first';
+        } else {
+            elements.symbolRandomBtn.classList.add('active');
+            elements.symbolRandomBtn.setAttribute('aria-checked', 'true');
+            elements.symbolHint.textContent = 'Random each game';
+        }
+    }
+
+    /**
+     * Updates the symbol hint to show the actual symbol assigned this game
+     * @param {string} playerSymbol - The symbol assigned to the player ('X' or 'O')
+     * @param {string} symbolChoice - The user's preference ('X', 'O', or 'random')
+     */
+    function updateSymbolHintForGame(playerSymbol, symbolChoice) {
+        if (symbolChoice === 'random') {
+            // Show which symbol was randomly assigned
+            if (playerSymbol === 'X') {
+                elements.symbolHint.textContent = 'Playing as X (you go first)';
+            } else {
+                elements.symbolHint.textContent = 'Playing as O (AI goes first)';
+            }
+        } else if (symbolChoice === 'X') {
+            elements.symbolHint.textContent = 'You go first';
+        } else {
+            elements.symbolHint.textContent = 'AI goes first';
         }
     }
 
@@ -258,17 +319,22 @@ const UI = (function() {
     /**
      * Shows the result modal
      * @param {string} winner - 'X', 'O', or 'draw'
+     * @param {string} playerSymbol - The symbol the human player was using ('X' or 'O')
      */
-    function showResultModal(winner) {
+    function showResultModal(winner, playerSymbol = 'X') {
         // Remove previous result classes
         elements.modalOverlay.classList.remove('result-win', 'result-lose', 'result-draw');
 
-        if (winner === 'X') {
-            // Player wins (rare, shouldn't happen with perfect AI)
+        // Determine if the player won based on their symbol
+        const playerWon = winner === playerSymbol;
+        const aiWon = winner !== 'draw' && winner !== playerSymbol;
+
+        if (playerWon) {
+            // Player wins (rare, shouldn't happen with perfect AI on hard mode)
             elements.modalOverlay.classList.add('result-win');
             elements.modalTitle.textContent = 'VICTORY!';
             elements.modalMessage.textContent = 'Impressive! You managed to beat the AI!';
-        } else if (winner === 'O') {
+        } else if (aiWon) {
             // AI wins
             elements.modalOverlay.classList.add('result-lose');
             elements.modalTitle.textContent = 'DEFEAT';
@@ -443,6 +509,25 @@ const UI = (function() {
                 handlers.onDifficultyChange('hard');
             }
         });
+
+        // Symbol selector buttons
+        elements.symbolXBtn.addEventListener('click', () => {
+            if (handlers.onSymbolChange) {
+                handlers.onSymbolChange('X');
+            }
+        });
+
+        elements.symbolOBtn.addEventListener('click', () => {
+            if (handlers.onSymbolChange) {
+                handlers.onSymbolChange('O');
+            }
+        });
+
+        elements.symbolRandomBtn.addEventListener('click', () => {
+            if (handlers.onSymbolChange) {
+                handlers.onSymbolChange('random');
+            }
+        });
     }
 
     /**
@@ -465,6 +550,8 @@ const UI = (function() {
         updateScores,
         updateSoundButton,
         updateDifficultyButtons,
+        updateSymbolButtons,
+        updateSymbolHintForGame,
         highlightWinningCells,
         drawWinningLine,
         clearWinningLine,

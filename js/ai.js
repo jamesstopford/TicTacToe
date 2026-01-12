@@ -249,12 +249,15 @@ const AI = (function() {
      * @param {Array} board - Current board state
      * @param {number} delay - Delay in milliseconds before returning move
      * @param {string} difficulty - Difficulty level ('easy' or 'hard')
+     * @param {string} aiSymbol - The symbol the AI is playing as ('X' or 'O'). Defaults to 'O'.
      * @returns {Promise<number|null>} Promise resolving to the move index
      */
-    function getMoveWithDifficultyAndDelay(board, delay = 400, difficulty = 'hard') {
+    function getMoveWithDifficultyAndDelay(board, delay = 400, difficulty = 'hard', aiSymbol = 'O') {
         return new Promise((resolve) => {
             // Calculate the move based on difficulty
-            const move = difficulty === 'easy' ? findRandomMove(board) : findBestMove(board);
+            const move = difficulty === 'easy'
+                ? findRandomMove(board)
+                : findBestMoveForSymbol(board, aiSymbol);
 
             // Add artificial delay for natural feel
             setTimeout(() => {
@@ -263,15 +266,133 @@ const AI = (function() {
         });
     }
 
+    /**
+     * Finds the best move for a given symbol using minimax
+     * @param {Array} board - Current board state
+     * @param {string} symbol - The symbol to find the best move for ('X' or 'O')
+     * @returns {number|null} Index of the best move, or null if no moves available
+     */
+    function findBestMoveForSymbol(board, symbol = 'O') {
+        // If AI plays as O, use the original behavior (AI maximizes)
+        // If AI plays as X, we need to adapt the minimax
+        if (symbol === 'O') {
+            return findBestMove(board);
+        }
+
+        // AI plays as X - need to find best move where X is maximizing
+        const boardCopy = [...board];
+        const emptyCells = getEmptyCells(boardCopy);
+
+        if (emptyCells.length === 0) {
+            return null;
+        }
+
+        // Optimization: If AI (X) goes first, choose center or corner randomly
+        if (emptyCells.length === 9) {
+            const firstMoves = [0, 2, 4, 6, 8];
+            return firstMoves[Math.floor(Math.random() * firstMoves.length)];
+        }
+
+        // Optimization: If board has 8 empty cells and center is taken, choose corner
+        if (emptyCells.length === 8 && boardCopy[4] !== EMPTY) {
+            const corners = [0, 2, 6, 8];
+            return corners[Math.floor(Math.random() * corners.length)];
+        }
+
+        let bestScore = -Infinity;
+        let bestMove = null;
+
+        for (const index of emptyCells) {
+            // Try the move (X is now the AI)
+            boardCopy[index] = PLAYER_X;
+
+            // Evaluate with minimax where X is maximizing
+            const score = minimaxForX(boardCopy, 0, false, -Infinity, Infinity);
+
+            // Undo the move
+            boardCopy[index] = EMPTY;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = index;
+            }
+        }
+
+        return bestMove;
+    }
+
+    /**
+     * Minimax algorithm when AI plays as X (X maximizes, O minimizes)
+     * @param {Array} board - Current board state
+     * @param {number} depth - Current recursion depth
+     * @param {boolean} isMaximizing - True if maximizing player's turn (X/AI)
+     * @param {number} alpha - Best score for maximizing player
+     * @param {number} beta - Best score for minimizing player
+     * @returns {number} The score of the board state
+     */
+    function minimaxForX(board, depth, isMaximizing, alpha, beta) {
+        const winner = checkWinner(board);
+
+        if (winner === PLAYER_X) {
+            // AI (X) wins - prefer faster wins
+            return SCORE_WIN - depth;
+        }
+        if (winner === PLAYER_O) {
+            // Human (O) wins - prefer slower losses
+            return SCORE_LOSE + depth;
+        }
+        if (isBoardFull(board)) {
+            return SCORE_DRAW;
+        }
+
+        const emptyCells = getEmptyCells(board);
+
+        if (isMaximizing) {
+            // AI's turn (X) - maximize score
+            let bestScore = -Infinity;
+
+            for (const index of emptyCells) {
+                board[index] = PLAYER_X;
+                const score = minimaxForX(board, depth + 1, false, alpha, beta);
+                board[index] = EMPTY;
+
+                bestScore = Math.max(score, bestScore);
+                alpha = Math.max(alpha, score);
+
+                if (beta <= alpha) break;
+            }
+
+            return bestScore;
+        } else {
+            // Human's turn (O) - minimize score
+            let bestScore = Infinity;
+
+            for (const index of emptyCells) {
+                board[index] = PLAYER_O;
+                const score = minimaxForX(board, depth + 1, true, alpha, beta);
+                board[index] = EMPTY;
+
+                bestScore = Math.min(score, bestScore);
+                beta = Math.min(beta, score);
+
+                if (beta <= alpha) break;
+            }
+
+            return bestScore;
+        }
+    }
+
     // Public API
     return {
         getMove,
         getMoveWithDelay,
         getMoveWithDifficultyAndDelay,
         findBestMove,
+        findBestMoveForSymbol,
         findRandomMove,
         getEasyMove,
         minimax,
+        minimaxForX,
         checkWinner,
         isBoardFull,
         getEmptyCells
