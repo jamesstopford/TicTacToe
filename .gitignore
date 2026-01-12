@@ -1,0 +1,16 @@
+# Agent configurations (local-only)
+.claude/
+
+# Node modules (if using npm/node)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
