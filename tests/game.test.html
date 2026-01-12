@@ -539,6 +539,188 @@
 
         // ============================================================
 
+        TestRunner.suite('Storage Module - Difficulty');
+
+        TestRunner.test('Storage loads default difficulty as hard when none saved', () => {
+            localStorage.removeItem('tictactoe_difficulty');
+            const difficulty = Storage.loadDifficulty();
+            TestRunner.assertEqual(difficulty, 'hard');
+        });
+
+        TestRunner.test('Storage saves and loads easy difficulty correctly', () => {
+            Storage.saveDifficulty('easy');
+            const loaded = Storage.loadDifficulty();
+            TestRunner.assertEqual(loaded, 'easy');
+        });
+
+        TestRunner.test('Storage saves and loads hard difficulty correctly', () => {
+            Storage.saveDifficulty('hard');
+            const loaded = Storage.loadDifficulty();
+            TestRunner.assertEqual(loaded, 'hard');
+        });
+
+        TestRunner.test('Storage rejects invalid difficulty values', () => {
+            // First set a valid value
+            Storage.saveDifficulty('easy');
+
+            // Try to save invalid value - should return false
+            const result = Storage.saveDifficulty('invalid');
+            TestRunner.assertFalse(result);
+
+            // Value should remain 'easy' since invalid was rejected
+            TestRunner.assertEqual(Storage.loadDifficulty(), 'easy');
+        });
+
+        TestRunner.test('Storage DIFFICULTY constants are exposed', () => {
+            TestRunner.assertEqual(Storage.DIFFICULTY.EASY, 'easy');
+            TestRunner.assertEqual(Storage.DIFFICULTY.HARD, 'hard');
+        });
+
+        // ============================================================
+
+        TestRunner.suite('AI Module - Easy Mode');
+
+        TestRunner.test('Easy AI returns a valid move', () => {
+            const board = ['', '', '', '', '', '', '', '', ''];
+            const move = AI.getEasyMove(board);
+            TestRunner.assertTrue(move >= 0 && move <= 8);
+        });
+
+        TestRunner.test('Easy AI returns null when no moves available', () => {
+            const board = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X'];
+            const move = AI.getEasyMove(board);
+            TestRunner.assertEqual(move, null);
+        });
+
+        TestRunner.test('Easy AI only returns empty cell indices', () => {
+            const board = ['X', 'O', '', 'X', 'O', '', '', '', 'X'];
+            const emptyIndices = [2, 5, 6, 7];
+
+            // Test multiple times since it is random
+            for (let i = 0; i < 50; i++) {
+                const move = AI.getEasyMove(board);
+                TestRunner.assertTrue(
+                    emptyIndices.includes(move),
+                    `Move ${move} should be one of ${emptyIndices}`
+                );
+            }
+        });
+
+        TestRunner.test('findRandomMove returns different moves over many calls (randomness check)', () => {
+            const board = ['', '', '', '', '', '', '', '', ''];
+            const moveSet = new Set();
+
+            // Call 100 times and collect unique moves
+            for (let i = 0; i < 100; i++) {
+                const move = AI.findRandomMove(board);
+                moveSet.add(move);
+            }
+
+            // Should have gotten multiple different moves (statistically very likely)
+            TestRunner.assertTrue(
+                moveSet.size >= 3,
+                `Expected multiple different moves, got ${moveSet.size} unique move(s)`
+            );
+        });
+
+        TestRunner.test('getMoveWithDifficultyAndDelay returns move for easy difficulty', async () => {
+            const board = ['', '', '', '', '', '', '', '', ''];
+            const move = await AI.getMoveWithDifficultyAndDelay(board, 0, 'easy');
+            TestRunner.assertTrue(move >= 0 && move <= 8);
+        });
+
+        TestRunner.test('getMoveWithDifficultyAndDelay returns move for hard difficulty', async () => {
+            const board = ['', '', '', '', '', '', '', '', ''];
+            const move = await AI.getMoveWithDifficultyAndDelay(board, 0, 'hard');
+            TestRunner.assertTrue(move >= 0 && move <= 8);
+        });
+
+        TestRunner.test('Easy AI can be beaten (player can win in 50 games)', () => {
+            // Simulate 50 games where player makes strategic moves against easy AI
+            // Player should be able to win at least some games
+            let playerWins = 0;
+
+            for (let game = 0; game < 50; game++) {
+                const board = ['', '', '', '', '', '', '', '', ''];
+                let currentPlayer = 'X';  // Player (X) goes first
+
+                while (true) {
+                    if (currentPlayer === 'X') {
+                        // Player uses optimal strategy (minimax)
+                        const move = AI.getMove(board);
+                        if (move === null) break;
+                        board[move] = 'X';
+                    } else {
+                        // Easy AI makes random move
+                        const move = AI.getEasyMove(board);
+                        if (move === null) break;
+                        board[move] = 'O';
+                    }
+
+                    // Check for winner
+                    const winner = AI.checkWinner(board);
+                    if (winner === 'X') {
+                        playerWins++;
+                        break;
+                    }
+                    if (winner === 'O' || AI.isBoardFull(board)) {
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+            }
+
+            // Player using optimal strategy against random AI should win frequently
+            TestRunner.assertTrue(
+                playerWins >= 10,
+                `Player should win at least 10 games against easy AI, but won ${playerWins}`
+            );
+        });
+
+        TestRunner.test('Hard AI vs Easy AI: Hard AI wins or draws all games', () => {
+            // Simulate games where hard AI plays against easy AI
+            // Hard AI should never lose
+            let hardLosses = 0;
+
+            for (let game = 0; game < 50; game++) {
+                const board = ['', '', '', '', '', '', '', '', ''];
+                // Alternate who goes first
+                let currentPlayer = game % 2 === 0 ? 'O' : 'X';  // O is hard AI, X is easy AI
+
+                while (true) {
+                    if (currentPlayer === 'O') {
+                        // Hard AI
+                        const move = AI.getMove(board);
+                        if (move === null) break;
+                        board[move] = 'O';
+                    } else {
+                        // Easy AI
+                        const move = AI.getEasyMove(board);
+                        if (move === null) break;
+                        board[move] = 'X';
+                    }
+
+                    // Check for winner
+                    const winner = AI.checkWinner(board);
+                    if (winner === 'X') {
+                        // Easy AI (X) beat Hard AI (O) - this is a loss for hard AI
+                        hardLosses++;
+                        break;
+                    }
+                    if (winner === 'O' || AI.isBoardFull(board)) {
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'O' ? 'X' : 'O';
+                }
+            }
+
+            TestRunner.assertEqual(hardLosses, 0, 'Hard AI should never lose to easy AI');
+        });
+
+        // ============================================================
+
         // Run and render all tests
         TestRunner.render();
     </script>

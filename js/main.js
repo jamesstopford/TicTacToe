@@ -10,6 +10,7 @@ const App = (function() {
     // Application state
     let scores = { wins: 0, losses: 0, draws: 0 };
     let soundEnabled = true;
+    let difficulty = 'hard';  // 'easy' or 'hard'
     let isProcessingMove = false;
 
     // AI thinking delay (ms) for natural feel
@@ -25,6 +26,7 @@ const App = (function() {
         // Load saved preferences
         scores = Storage.loadScores();
         soundEnabled = Storage.loadSoundEnabled();
+        difficulty = Storage.loadDifficulty();
 
         // Initialize sound system
         await Sound.init(soundEnabled);
@@ -32,6 +34,7 @@ const App = (function() {
         // Update UI with loaded state
         UI.updateScores(scores);
         UI.updateSoundButton(soundEnabled);
+        UI.updateDifficultyButtons(difficulty);
 
         // Setup event handlers
         UI.setupEventListeners({
@@ -41,7 +44,8 @@ const App = (function() {
             onSoundToggle: handleSoundToggle,
             onModalClose: handleModalClose,
             onResetConfirm: handleResetConfirm,
-            onResetCancel: handleResetCancel
+            onResetCancel: handleResetCancel,
+            onDifficultyChange: handleDifficultyChange
         });
 
         // Set up game callbacks
@@ -102,6 +106,7 @@ const App = (function() {
 
     /**
      * Triggers the AI to make a move
+     * Uses the current difficulty setting to determine move strategy
      */
     async function triggerAIMove() {
         isProcessingMove = true;
@@ -110,9 +115,9 @@ const App = (function() {
         UI.showAIThinking();
         UI.disableBoard();
 
-        // Get AI move with delay
+        // Get AI move with delay, respecting difficulty setting
         const board = Game.getBoard();
-        const move = await AI.getMoveWithDelay(board, AI_DELAY);
+        const move = await AI.getMoveWithDifficultyAndDelay(board, AI_DELAY, difficulty);
 
         // Play sound
         Sound.play('placeO');
@@ -232,6 +237,31 @@ const App = (function() {
     }
 
     /**
+     * Handles difficulty change
+     * @param {string} newDifficulty - The new difficulty level ('easy' or 'hard')
+     */
+    function handleDifficultyChange(newDifficulty) {
+        // Only process if difficulty is actually changing
+        if (newDifficulty === difficulty) {
+            return;
+        }
+
+        Sound.play('click');
+
+        // Update difficulty state
+        difficulty = newDifficulty;
+
+        // Save preference
+        Storage.saveDifficulty(difficulty);
+
+        // Update UI
+        UI.updateDifficultyButtons(difficulty);
+
+        // Start a new game with the new difficulty
+        startNewGame();
+    }
+
+    /**
      * Handles result modal close
      */
     function handleModalClose() {
@@ -251,7 +281,8 @@ const App = (function() {
     return {
         startNewGame,
         getScores: () => ({ ...scores }),
-        isSoundEnabled: () => soundEnabled
+        isSoundEnabled: () => soundEnabled,
+        getDifficulty: () => difficulty
     };
 })();
 

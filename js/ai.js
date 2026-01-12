@@ -217,14 +217,64 @@ const AI = (function() {
         return findBestMove(board);
     }
 
+    /**
+     * Finds a random valid move for the easy AI
+     * This allows players to actually win against the AI
+     * @param {Array} board - Current board state
+     * @returns {number|null} Index of a random valid move, or null if no moves available
+     */
+    function findRandomMove(board) {
+        const emptyCells = getEmptyCells(board);
+
+        if (emptyCells.length === 0) {
+            return null;
+        }
+
+        // Pick a random empty cell
+        const randomIndex = Math.floor(Math.random() * emptyCells.length);
+        return emptyCells[randomIndex];
+    }
+
+    /**
+     * Gets an easy AI move (random selection)
+     * @param {Array} board - Current board state
+     * @returns {number|null} Index of a random valid move
+     */
+    function getEasyMove(board) {
+        return findRandomMove(board);
+    }
+
+    /**
+     * Gets the AI's move with optional artificial delay, respecting difficulty level
+     * @param {Array} board - Current board state
+     * @param {number} delay - Delay in milliseconds before returning move
+     * @param {string} difficulty - Difficulty level ('easy' or 'hard')
+     * @returns {Promise<number|null>} Promise resolving to the move index
+     */
+    function getMoveWithDifficultyAndDelay(board, delay = 400, difficulty = 'hard') {
+        return new Promise((resolve) => {
+            // Calculate the move based on difficulty
+            const move = difficulty === 'easy' ? findRandomMove(board) : findBestMove(board);
+
+            // Add artificial delay for natural feel
+            setTimeout(() => {
+                resolve(move);
+            }, delay);
+        });
+    }
+
     // Public API
     return {
         getMove,
         getMoveWithDelay,
+        getMoveWithDifficultyAndDelay,
         findBestMove,
+        findRandomMove,
+        getEasyMove,
         minimax,
         checkWinner,
-        isBoardFull
+        isBoardFull,
+        getEmptyCells
     };
 })();
 

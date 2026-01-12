@@ -10,8 +10,17 @@ const Storage = (function() {
     // Storage keys
     const KEYS = {
         SCORES: 'tictactoe_scores',
-        SOUND_ENABLED: 'tictactoe_sound_enabled'
+        SOUND_ENABLED: 'tictactoe_sound_enabled',
+        DIFFICULTY: 'tictactoe_difficulty'
     };
+
+    // Difficulty levels
+    const DIFFICULTY = {
+        EASY: 'easy',
+        HARD: 'hard'
+    };
+
+    const DEFAULT_DIFFICULTY = DIFFICULTY.HARD;
 
     // Default values
     const DEFAULT_SCORES = {
@@ -167,6 +176,34 @@ const Storage = (function() {
     }
 
     /**
+     * Loads difficulty setting from localStorage
+     * @returns {string} Difficulty level ('easy' or 'hard')
+     */
+    function loadDifficulty() {
+        const value = getItem(KEYS.DIFFICULTY, null);
+
+        // Validate that the value is a valid difficulty level
+        if (value === DIFFICULTY.EASY || value === DIFFICULTY.HARD) {
+            return value;
+        }
+
+        return DEFAULT_DIFFICULTY;
+    }
+
+    /**
+     * Saves difficulty setting to localStorage
+     * @param {string} difficulty - Difficulty level ('easy' or 'hard')
+     * @returns {boolean} True if save was successful
+     */
+    function saveDifficulty(difficulty) {
+        // Validate input - only accept valid difficulty values
+        if (difficulty !== DIFFICULTY.EASY && difficulty !== DIFFICULTY.HARD) {
+            return false;
+        }
+        return setItem(KEYS.DIFFICULTY, difficulty);
+    }
+
+    /**
      * Checks if storage is available
      * @returns {boolean} True if localStorage is functional
      */
@@ -184,7 +221,10 @@ const Storage = (function() {
         resetScores,
         loadSoundEnabled,
         saveSoundEnabled,
-        isAvailable
+        loadDifficulty,
+        saveDifficulty,
+        isAvailable,
+        DIFFICULTY
     };
 })();
 
