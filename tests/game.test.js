@@ -847,5 +847,63 @@ TestRunner.test('Storage handles whitespace-only player name as empty', () => {
 
 // ============================================================
 
+TestRunner.suite('Storage Module - Theme');
+
+TestRunner.test('Storage loads default theme as "default" when none saved', () => {
+    localStorageMock.removeItem('tictactoe_theme');
+    const theme = Storage.loadTheme();
+    TestRunner.assertEqual(theme, 'default');
+});
+
+TestRunner.test('Storage saves and loads "default" theme correctly', () => {
+    Storage.saveTheme('default');
+    const loaded = Storage.loadTheme();
+    TestRunner.assertEqual(loaded, 'default');
+});
+
+TestRunner.test('Storage saves and loads "terminal" theme correctly', () => {
+    Storage.saveTheme('terminal');
+    const loaded = Storage.loadTheme();
+    TestRunner.assertEqual(loaded, 'terminal');
+});
+
+TestRunner.test('Storage rejects invalid theme values', () => {
+    // First set a valid value
+    Storage.saveTheme('default');
+
+    // Try to save invalid value - should return false
+    const result = Storage.saveTheme('invalid');
+    TestRunner.assertFalse(result);
+
+    // Value should remain 'default' since invalid was rejected
+    TestRunner.assertEqual(Storage.loadTheme(), 'default');
+});
+
+TestRunner.test('Storage THEME constants are exposed', () => {
+    TestRunner.assertEqual(Storage.THEME.DEFAULT, 'default');
+    TestRunner.assertEqual(Storage.THEME.TERMINAL, 'terminal');
+});
+
+TestRunner.test('Storage handles corrupted theme value in localStorage', () => {
+    // Directly set an invalid value in localStorage
+    localStorageMock.setItem('tictactoe_theme', JSON.stringify('invalid_theme'));
+    const theme = Storage.loadTheme();
+    // Should fall back to default
+    TestRunner.assertEqual(theme, 'default');
+});
+
+TestRunner.test('Theme can be changed multiple times', () => {
+    Storage.saveTheme('default');
+    TestRunner.assertEqual(Storage.loadTheme(), 'default');
+
+    Storage.saveTheme('terminal');
+    TestRunner.assertEqual(Storage.loadTheme(), 'terminal');
+
+    Storage.saveTheme('default');
+    TestRunner.assertEqual(Storage.loadTheme(), 'default');
+});
+
+// ============================================================
+
 // Run tests and show summary
 TestRunner.summary();

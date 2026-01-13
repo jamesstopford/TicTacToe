@@ -212,36 +212,36 @@ TicTacToe/
 - [x] XSS prevention works (name is sanitized with HTML entity escaping)
 - [x] Tests verify localStorage operations and display logic
 
-### Feature 7.4: Theme Selection - TODO
+### Feature 7.4: Theme Selection - COMPLETED
 **Priority:** Medium
 **Description:** Add preferences control to select between multiple visual themes. See specs/specs.md FR-10 for complete requirements.
 
 **Requirements:**
-- Create preferences/settings UI control (button or panel)
-- Implement at least 2 themes:
+- [x] Create preferences/settings UI control (button or panel)
+- [x] Implement at least 2 themes:
   - Default: Hacker aesthetic (current neon cyan/magenta/green)
-  - Alternate: Different color scheme (e.g., retro terminal green, blue/orange, etc.)
-- Save theme preference to localStorage (key: 'tictactoe_theme')
-- Apply theme changes immediately without page reload
-- All UI elements respect selected theme (board, buttons, modals, text)
-- Smooth CSS transitions when switching themes
-- Load saved theme preference on page load
-- Default to 'default' theme if no preference saved
-- Add tests for theme switching and persistence
+  - Terminal: Retro green monochrome with amber accents
+- [x] Save theme preference to localStorage (key: 'tictactoe_theme')
+- [x] Apply theme changes immediately without page reload
+- [x] All UI elements respect selected theme (board, buttons, modals, text)
+- [x] Smooth CSS transitions when switching themes
+- [x] Load saved theme preference on page load
+- [x] Default to 'default' theme if no preference saved
+- [x] Add tests for theme switching and persistence
 
 **Acceptance Criteria:**
-- Player can select between at least 2 different themes
-- Theme changes apply immediately to all UI elements
-- Theme transitions are smooth (CSS transitions)
-- Theme preference persists across browser sessions
-- Default theme loads correctly when no preference exists
-- All colors/styling update appropriately per theme
-- Tests verify localStorage operations and theme application
+- [x] Player can select between at least 2 different themes
+- [x] Theme changes apply immediately to all UI elements
+- [x] Theme transitions are smooth (CSS transitions)
+- [x] Theme preference persists across browser sessions
+- [x] Default theme loads correctly when no preference exists
+- [x] All colors/styling update appropriately per theme
+- [x] Tests verify localStorage operations and theme application
 
 ## Current Status
 - **In Progress:** None
-- **Completed:** All 6 phases (MVP complete), comprehensive tests, Feature 7.1 (Easy Mode), Feature 7.2 (Symbol Selection), Feature 7.3 (Player Name)
-- **Next Up:** Feature 7.4 (Theme Selection)
+- **Completed:** All 6 phases (MVP complete), comprehensive tests, Feature 7.1 (Easy Mode), Feature 7.2 (Symbol Selection), Feature 7.3 (Player Name), Feature 7.4 (Theme Selection)
+- **Next Up:** None (all planned features complete)
 - **Blocked:** None
 
 ## Discovered Issues

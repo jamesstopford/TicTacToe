@@ -13,7 +13,8 @@ const Storage = (function() {
         SOUND_ENABLED: 'tictactoe_sound_enabled',
         DIFFICULTY: 'tictactoe_difficulty',
         PLAYER_SYMBOL: 'tictactoe_player_symbol',
-        PLAYER_NAME: 'tictactoe_player_name'
+        PLAYER_NAME: 'tictactoe_player_name',
+        THEME: 'tictactoe_theme'
     };
 
     // Difficulty levels
@@ -32,6 +33,14 @@ const Storage = (function() {
     };
 
     const DEFAULT_SYMBOL_CHOICE = SYMBOL_CHOICE.RANDOM;
+
+    // Theme options
+    const THEME = {
+        DEFAULT: 'default',
+        TERMINAL: 'terminal'
+    };
+
+    const DEFAULT_THEME = THEME.DEFAULT;
 
     // Default values
     const DEFAULT_SCORES = {
@@ -326,6 +335,34 @@ const Storage = (function() {
         return savePlayerName(DEFAULT_PLAYER_NAME);
     }
 
+    /**
+     * Loads theme preference from localStorage
+     * @returns {string} Theme name ('default' or 'terminal')
+     */
+    function loadTheme() {
+        const value = getItem(KEYS.THEME, null);
+
+        // Validate that the value is a valid theme
+        if (value === THEME.DEFAULT || value === THEME.TERMINAL) {
+            return value;
+        }
+
+        return DEFAULT_THEME;
+    }
+
+    /**
+     * Saves theme preference to localStorage
+     * @param {string} theme - Theme name ('default' or 'terminal')
+     * @returns {boolean} True if save was successful
+     */
+    function saveTheme(theme) {
+        // Validate input - only accept valid theme values
+        if (theme !== THEME.DEFAULT && theme !== THEME.TERMINAL) {
+            return false;
+        }
+        return setItem(KEYS.THEME, theme);
+    }
+
     // Initialize on load
     init();
 
@@ -344,9 +381,12 @@ const Storage = (function() {
         savePlayerName,
         clearPlayerName,
         sanitizePlayerName,
+        loadTheme,
+        saveTheme,
         isAvailable,
         DIFFICULTY,
         SYMBOL_CHOICE,
+        THEME,
         PLAYER_NAME_MAX_LENGTH
     };
 })();

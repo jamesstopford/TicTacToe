@@ -14,6 +14,7 @@ const App = (function() {
     let symbolChoice = 'random';  // 'X', 'O', or 'random'
     let currentPlayerSymbol = 'X';  // The actual symbol for current game (resolved from symbolChoice)
     let playerName = '';  // Player's display name
+    let theme = 'default';  // 'default' or 'terminal'
     let isProcessingMove = false;
 
     // AI thinking delay (ms) for natural feel
@@ -32,9 +33,13 @@ const App = (function() {
         difficulty = Storage.loadDifficulty();
         symbolChoice = Storage.loadPlayerSymbol();
         playerName = Storage.loadPlayerName();
+        theme = Storage.loadTheme();
 
         // Initialize sound system
         await Sound.init(soundEnabled);
+
+        // Apply theme immediately (before other UI updates for visual consistency)
+        UI.applyTheme(theme);
 
         // Update UI with loaded state
         UI.updateScores(scores);
@@ -42,6 +47,7 @@ const App = (function() {
         UI.updateDifficultyButtons(difficulty);
         UI.updateSymbolButtons(symbolChoice);
         UI.updateGreeting(playerName);
+        UI.updateThemeButtons(theme);
 
         // Setup event handlers
         UI.setupEventListeners({
@@ -56,7 +62,8 @@ const App = (function() {
             onSymbolChange: handleSymbolChange,
             onEditNameClick: handleEditNameClick,
             onNameSave: handleNameSave,
-            onNameCancel: handleNameCancel
+            onNameCancel: handleNameCancel,
+            onThemeChange: handleThemeChange
         });
 
         // Set up game callbacks
@@ -318,6 +325,31 @@ const App = (function() {
     }
 
     /**
+     * Handles theme change
+     * @param {string} newTheme - The new theme ('default' or 'terminal')
+     */
+    function handleThemeChange(newTheme) {
+        // Only process if theme is actually changing
+        if (newTheme === theme) {
+            return;
+        }
+
+        Sound.play('click');
+
+        // Update theme state
+        theme = newTheme;
+
+        // Save preference
+        Storage.saveTheme(theme);
+
+        // Apply theme to document (CSS custom properties change)
+        UI.applyTheme(theme);
+
+        // Update UI buttons
+        UI.updateThemeButtons(theme);
+    }
+
+    /**
      * Handles result modal close
      */
     function handleModalClose() {
@@ -387,7 +419,8 @@ const App = (function() {
         getDifficulty: () => difficulty,
         getSymbolChoice: () => symbolChoice,
         getCurrentPlayerSymbol: () => currentPlayerSymbol,
-        getPlayerName: () => playerName
+        getPlayerName: () => playerName,
+        getTheme: () => theme
     };
 })();
 
