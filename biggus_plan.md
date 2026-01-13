@@ -148,24 +148,24 @@ TicTacToe/
 
 ## Phase 7: New Features (Enhancement)
 
-### Feature 7.1: Easy Mode AI Difficulty - TODO
+### Feature 7.1: Easy Mode AI Difficulty - COMPLETED
 **Priority:** High
 **Description:** Add an easy mode AI difficulty option that makes random moves instead of using minimax, allowing casual players to win.
 
 **Requirements:**
-- Add difficulty selector UI (toggle or buttons for Easy/Hard modes)
-- Implement easy AI that makes random valid moves
-- Keep existing minimax AI as "Hard" mode
-- Persist difficulty preference to localStorage
-- Update UI to show current difficulty level
-- Add tests for easy mode AI behavior
+- [x] Add difficulty selector UI (toggle or buttons for Easy/Hard modes)
+- [x] Implement easy AI that makes random valid moves
+- [x] Keep existing minimax AI as "Hard" mode
+- [x] Persist difficulty preference to localStorage
+- [x] Update UI to show current difficulty level
+- [x] Add tests for easy mode AI behavior
 
 **Acceptance Criteria:**
-- Player can select between Easy and Hard difficulty
-- Easy mode AI makes random moves (player can win)
-- Hard mode AI remains unbeatable (existing behavior)
-- Difficulty selection persists across browser sessions
-- Tests verify both AI modes work correctly
+- [x] Player can select between Easy and Hard difficulty
+- [x] Easy mode AI makes random moves (player can win)
+- [x] Hard mode AI remains unbeatable (existing behavior)
+- [x] Difficulty selection persists across browser sessions
+- [x] Tests verify both AI modes work correctly
 
 ### Feature 7.2: Player Symbol Selection (X/O/Random) - COMPLETED
 **Priority:** High
@@ -189,28 +189,28 @@ TicTacToe/
 - [x] Symbol preference persists across sessions
 - [x] Tests verify all symbol assignment scenarios
 
-### Feature 7.3: Player Name and Personalization - TODO
+### Feature 7.3: Player Name and Personalization - COMPLETED
 **Priority:** Medium
 **Description:** Allow players to set their name and display a personalized greeting. See specs/specs.md FR-9 for complete requirements.
 
 **Requirements:**
-- Add input field for player name (text input)
-- Save player name to localStorage (key: 'tictactoe_player_name')
-- Display "Hello {Name}" greeting when name is set
-- Display "Hello Player" (or similar) when no name is set
-- Allow player to change name at any time
-- Sanitize name for display to prevent XSS
-- Name appears in greeting area near title
-- Add tests for name storage and display
+- [x] Add input field for player name (text input via modal)
+- [x] Save player name to localStorage (key: 'tictactoe_player_name')
+- [x] Display "Hello, {Name}" greeting when name is set
+- [x] Display "Hello, Player" when no name is set
+- [x] Allow player to change name at any time (edit button opens modal)
+- [x] Sanitize name for display to prevent XSS
+- [x] Name appears in greeting area near title
+- [x] Add tests for name storage and display
 
 **Acceptance Criteria:**
-- Player can enter and save their name
-- Greeting displays "Hello {Name}" when name is set
-- Greeting displays default text when no name is set
-- Name persists across browser sessions
-- Name can be changed/updated at any time
-- XSS prevention works (name is sanitized)
-- Tests verify localStorage operations and display logic
+- [x] Player can enter and save their name
+- [x] Greeting displays "Hello, {Name}" when name is set
+- [x] Greeting displays default text when no name is set
+- [x] Name persists across browser sessions
+- [x] Name can be changed/updated at any time
+- [x] XSS prevention works (name is sanitized with HTML entity escaping)
+- [x] Tests verify localStorage operations and display logic
 
 ### Feature 7.4: Theme Selection - TODO
 **Priority:** Medium
@@ -240,8 +240,8 @@ TicTacToe/
 
 ## Current Status
 - **In Progress:** None
-- **Completed:** All 6 phases (MVP complete), comprehensive tests, Feature 7.2 (Symbol Selection)
-- **Next Up:** Feature 7.1 (Easy Mode), Feature 7.3 (Player Name), Feature 7.4 (Theme Selection)
+- **Completed:** All 6 phases (MVP complete), comprehensive tests, Feature 7.1 (Easy Mode), Feature 7.2 (Symbol Selection), Feature 7.3 (Player Name)
+- **Next Up:** Feature 7.4 (Theme Selection)
 - **Blocked:** None
 
 ## Discovered Issues

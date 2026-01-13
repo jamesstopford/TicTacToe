@@ -753,5 +753,99 @@ TestRunner.test('AI as X never loses when going first (50 games)', () => {
 
 // ============================================================
 
+TestRunner.suite('Storage Module - Player Name');
+
+TestRunner.test('Storage loads empty string when no player name saved', () => {
+    localStorageMock.removeItem('tictactoe_player_name');
+    const name = Storage.loadPlayerName();
+    TestRunner.assertEqual(name, '');
+});
+
+TestRunner.test('Storage saves and loads player name correctly', () => {
+    Storage.savePlayerName('Alice');
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded, 'Alice');
+});
+
+TestRunner.test('Storage trims whitespace from player name', () => {
+    Storage.savePlayerName('  Bob  ');
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded, 'Bob');
+});
+
+TestRunner.test('Storage limits player name to 30 characters', () => {
+    const longName = 'A'.repeat(50);
+    Storage.savePlayerName(longName);
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded.length, 30);
+});
+
+TestRunner.test('Storage sanitizes player name to prevent XSS', () => {
+    Storage.savePlayerName('<script>alert("xss")</script>');
+    const loaded = Storage.loadPlayerName();
+    // Should not contain raw < or > characters
+    TestRunner.assertFalse(loaded.includes('<'));
+    TestRunner.assertFalse(loaded.includes('>'));
+    // Should contain escaped versions
+    TestRunner.assertTrue(loaded.includes('&lt;'));
+    TestRunner.assertTrue(loaded.includes('&gt;'));
+});
+
+TestRunner.test('Storage sanitizes ampersand in player name', () => {
+    Storage.savePlayerName('Rock & Roll');
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded, 'Rock &amp; Roll');
+});
+
+TestRunner.test('Storage sanitizes quotes in player name', () => {
+    Storage.savePlayerName('He said "hello"');
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertTrue(loaded.includes('&quot;'));
+});
+
+TestRunner.test('Storage sanitizes single quotes in player name', () => {
+    Storage.savePlayerName("It's me");
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertTrue(loaded.includes('&#039;'));
+});
+
+TestRunner.test('clearPlayerName resets to empty string', () => {
+    Storage.savePlayerName('TestUser');
+    Storage.clearPlayerName();
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded, '');
+});
+
+TestRunner.test('sanitizePlayerName returns empty string for non-string input', () => {
+    TestRunner.assertEqual(Storage.sanitizePlayerName(null), '');
+    TestRunner.assertEqual(Storage.sanitizePlayerName(undefined), '');
+    TestRunner.assertEqual(Storage.sanitizePlayerName(123), '');
+    TestRunner.assertEqual(Storage.sanitizePlayerName({}), '');
+});
+
+TestRunner.test('sanitizePlayerName handles normal names correctly', () => {
+    TestRunner.assertEqual(Storage.sanitizePlayerName('John Doe'), 'John Doe');
+    TestRunner.assertEqual(Storage.sanitizePlayerName('Player1'), 'Player1');
+    TestRunner.assertEqual(Storage.sanitizePlayerName('X-Wing'), 'X-Wing');
+});
+
+TestRunner.test('PLAYER_NAME_MAX_LENGTH constant is exposed and equals 30', () => {
+    TestRunner.assertEqual(Storage.PLAYER_NAME_MAX_LENGTH, 30);
+});
+
+TestRunner.test('Storage handles empty string player name', () => {
+    Storage.savePlayerName('');
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded, '');
+});
+
+TestRunner.test('Storage handles whitespace-only player name as empty', () => {
+    Storage.savePlayerName('   ');
+    const loaded = Storage.loadPlayerName();
+    TestRunner.assertEqual(loaded, '');
+});
+
+// ============================================================
+
 // Run tests and show summary
 TestRunner.summary();

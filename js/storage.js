@@ -12,7 +12,8 @@ const Storage = (function() {
         SCORES: 'tictactoe_scores',
         SOUND_ENABLED: 'tictactoe_sound_enabled',
         DIFFICULTY: 'tictactoe_difficulty',
-        PLAYER_SYMBOL: 'tictactoe_player_symbol'
+        PLAYER_SYMBOL: 'tictactoe_player_symbol',
+        PLAYER_NAME: 'tictactoe_player_name'
     };
 
     // Difficulty levels
@@ -253,6 +254,78 @@ const Storage = (function() {
         return storageAvailable;
     }
 
+    // Player name constraints
+    const PLAYER_NAME_MAX_LENGTH = 30;
+    const DEFAULT_PLAYER_NAME = '';
+
+    /**
+     * Sanitizes a player name for safe display.
+     * Prevents XSS by escaping HTML special characters and trimming whitespace.
+     * @param {string} name - The raw name input
+     * @returns {string} Sanitized name safe for display
+     */
+    function sanitizePlayerName(name) {
+        if (typeof name !== 'string') {
+            return DEFAULT_PLAYER_NAME;
+        }
+
+        // Trim whitespace
+        let sanitized = name.trim();
+
+        // Limit length
+        if (sanitized.length > PLAYER_NAME_MAX_LENGTH) {
+            sanitized = sanitized.substring(0, PLAYER_NAME_MAX_LENGTH);
+        }
+
+        // Escape HTML special characters to prevent XSS
+        sanitized = sanitized
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        return sanitized;
+    }
+
+    /**
+     * Loads player name from localStorage
+     * @returns {string} Player name or empty string if none saved
+     */
+    function loadPlayerName() {
+        const value = getItem(KEYS.PLAYER_NAME, null);
+
+        if (typeof value === 'string') {
+            // Value was already sanitized when saved, just return it
+            // Limit length as a safety check
+            if (value.length > PLAYER_NAME_MAX_LENGTH) {
+                return value.substring(0, PLAYER_NAME_MAX_LENGTH);
+            }
+            return value;
+        }
+
+        return DEFAULT_PLAYER_NAME;
+    }
+
+    /**
+     * Saves player name to localStorage
+     * @param {string} name - Player name to save
+     * @returns {boolean} True if save was successful
+     */
+    function savePlayerName(name) {
+        // Sanitize before saving
+        const sanitized = sanitizePlayerName(name);
+        return setItem(KEYS.PLAYER_NAME, sanitized);
+    }
+
+    /**
+     * Clears the stored player name
+     * @returns {boolean} True if clear was successful
+     */
+    function clearPlayerName() {
+        return savePlayerName(DEFAULT_PLAYER_NAME);
+    }
+
     // Initialize on load
     init();
 
@@ -267,9 +340,14 @@ const Storage = (function() {
         saveDifficulty,
         loadPlayerSymbol,
         savePlayerSymbol,
+        loadPlayerName,
+        savePlayerName,
+        clearPlayerName,
+        sanitizePlayerName,
         isAvailable,
         DIFFICULTY,
-        SYMBOL_CHOICE
+        SYMBOL_CHOICE,
+        PLAYER_NAME_MAX_LENGTH
     };
 })();
 
