@@ -74,6 +74,10 @@ const UI = (function() {
             greetingText: document.getElementById('greeting-text'),
             editNameBtn: document.getElementById('edit-name-btn'),
 
+            // Theme Selector
+            themeDefaultBtn: document.getElementById('theme-default'),
+            themeTerminalBtn: document.getElementById('theme-terminal'),
+
             // Name Modal
             nameModalOverlay: document.getElementById('name-modal-overlay'),
             playerNameInput: document.getElementById('player-name-input'),
@@ -278,6 +282,42 @@ const UI = (function() {
             elements.symbolHint.textContent = 'You go first';
         } else {
             elements.symbolHint.textContent = 'AI goes first';
+        }
+    }
+
+    /**
+     * Updates the theme selector buttons to reflect current theme
+     * @param {string} theme - Current theme ('default' or 'terminal')
+     */
+    function updateThemeButtons(theme) {
+        // Reset all buttons
+        elements.themeDefaultBtn.classList.remove('active');
+        elements.themeDefaultBtn.setAttribute('aria-checked', 'false');
+        elements.themeTerminalBtn.classList.remove('active');
+        elements.themeTerminalBtn.setAttribute('aria-checked', 'false');
+
+        // Activate selected button
+        if (theme === 'terminal') {
+            elements.themeTerminalBtn.classList.add('active');
+            elements.themeTerminalBtn.setAttribute('aria-checked', 'true');
+        } else {
+            // Default theme
+            elements.themeDefaultBtn.classList.add('active');
+            elements.themeDefaultBtn.setAttribute('aria-checked', 'true');
+        }
+    }
+
+    /**
+     * Applies the theme to the document by setting the data-theme attribute on root
+     * This triggers CSS custom property changes for theme switching
+     * @param {string} theme - Theme to apply ('default' or 'terminal')
+     */
+    function applyTheme(theme) {
+        if (theme === 'terminal') {
+            document.documentElement.setAttribute('data-theme', 'terminal');
+        } else {
+            // Default theme - remove the attribute entirely
+            document.documentElement.removeAttribute('data-theme');
         }
     }
 
@@ -585,6 +625,19 @@ const UI = (function() {
             }
         });
 
+        // Theme selector buttons
+        elements.themeDefaultBtn.addEventListener('click', () => {
+            if (handlers.onThemeChange) {
+                handlers.onThemeChange('default');
+            }
+        });
+
+        elements.themeTerminalBtn.addEventListener('click', () => {
+            if (handlers.onThemeChange) {
+                handlers.onThemeChange('terminal');
+            }
+        });
+
         // Player name edit button
         elements.editNameBtn.addEventListener('click', () => {
             if (handlers.onEditNameClick) {
@@ -647,6 +700,8 @@ const UI = (function() {
         updateDifficultyButtons,
         updateSymbolButtons,
         updateSymbolHintForGame,
+        updateThemeButtons,
+        applyTheme,
         highlightWinningCells,
         drawWinningLine,
         clearWinningLine,

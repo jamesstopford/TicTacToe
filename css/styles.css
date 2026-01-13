@@ -4,7 +4,7 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   CSS Custom Properties (Design Tokens)
+   CSS Custom Properties (Design Tokens) - Default Theme
    -------------------------------------------------------------------------- */
 :root {
     /* Colors */
@@ -26,6 +26,26 @@
     --color-green-glow: rgba(0, 255, 0, 0.5);
     --color-red: #ff3333;
     --color-red-glow: rgba(255, 51, 51, 0.5);
+
+    /* Theme-specific colors for elements */
+    --color-primary: var(--color-cyan);
+    --color-primary-dim: var(--color-cyan-dim);
+    --color-primary-glow: var(--color-cyan-glow);
+    --color-secondary: var(--color-magenta);
+    --color-secondary-dim: var(--color-magenta-dim);
+    --color-secondary-glow: var(--color-magenta-glow);
+    --color-accent: var(--color-green);
+    --color-accent-dim: var(--color-green-dim);
+    --color-accent-glow: var(--color-green-glow);
+
+    /* Mark colors (X and O) */
+    --color-mark-x: var(--color-cyan);
+    --color-mark-x-glow: var(--color-cyan-glow);
+    --color-mark-o: var(--color-magenta);
+    --color-mark-o-glow: var(--color-magenta-glow);
+
+    /* Theme transition duration */
+    --theme-transition: 300ms ease;
 
     /* Grid */
     --grid-line-color: var(--color-cyan-dim);
@@ -81,6 +101,62 @@
 }
 
 /* --------------------------------------------------------------------------
+   Terminal Theme (Retro Green Monochrome)
+   A classic green-on-black terminal/CRT aesthetic
+   -------------------------------------------------------------------------- */
+:root[data-theme="terminal"] {
+    /* Override background colors with darker tone */
+    --color-bg: #0a0f0a;
+    --color-bg-secondary: #0d140d;
+    --color-text-primary: #33ff33;
+    --color-text-secondary: #228822;
+    --color-text-muted: #145514;
+
+    /* Terminal green palette */
+    --color-terminal-green: #33ff33;
+    --color-terminal-green-dim: #0d2d0d;
+    --color-terminal-green-glow: rgba(51, 255, 51, 0.5);
+    --color-terminal-green-bright: #66ff66;
+    --color-terminal-green-bright-glow: rgba(102, 255, 102, 0.6);
+
+    /* Amber accent for contrast */
+    --color-terminal-amber: #ffcc00;
+    --color-terminal-amber-dim: #332a00;
+    --color-terminal-amber-glow: rgba(255, 204, 0, 0.5);
+
+    /* Override neon colors with terminal palette */
+    --color-cyan: var(--color-terminal-green);
+    --color-cyan-dim: var(--color-terminal-green-dim);
+    --color-cyan-glow: var(--color-terminal-green-glow);
+    --color-magenta: var(--color-terminal-amber);
+    --color-magenta-dim: var(--color-terminal-amber-dim);
+    --color-magenta-glow: var(--color-terminal-amber-glow);
+    --color-green: var(--color-terminal-green-bright);
+    --color-green-dim: var(--color-terminal-green-dim);
+    --color-green-glow: var(--color-terminal-green-bright-glow);
+
+    /* Theme-specific colors */
+    --color-primary: var(--color-terminal-green);
+    --color-primary-dim: var(--color-terminal-green-dim);
+    --color-primary-glow: var(--color-terminal-green-glow);
+    --color-secondary: var(--color-terminal-amber);
+    --color-secondary-dim: var(--color-terminal-amber-dim);
+    --color-secondary-glow: var(--color-terminal-amber-glow);
+    --color-accent: var(--color-terminal-green-bright);
+    --color-accent-dim: var(--color-terminal-green-dim);
+    --color-accent-glow: var(--color-terminal-green-bright-glow);
+
+    /* Mark colors */
+    --color-mark-x: var(--color-terminal-green);
+    --color-mark-x-glow: var(--color-terminal-green-glow);
+    --color-mark-o: var(--color-terminal-amber);
+    --color-mark-o-glow: var(--color-terminal-amber-glow);
+
+    /* Grid in terminal theme */
+    --grid-line-color: var(--color-terminal-green-dim);
+}
+
+/* --------------------------------------------------------------------------
    Reset & Base Styles
    -------------------------------------------------------------------------- */
 *, *::before, *::after {
@@ -106,6 +182,9 @@ body {
     padding: var(--spacing-md);
     overflow-x: hidden;
     line-height: 1.5;
+    transition:
+        background-color var(--theme-transition),
+        color var(--theme-transition);
 }
 
 button {
@@ -173,6 +252,9 @@ button {
         0 0 20px var(--color-cyan-glow),
         0 0 40px var(--color-cyan-glow);
     animation: titleGlow 3s ease-in-out infinite alternate;
+    transition:
+        color var(--theme-transition),
+        text-shadow var(--theme-transition);
 }
 
 @keyframes titleGlow {
@@ -267,6 +349,9 @@ button {
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-cyan-dim);
     border-radius: 4px;
+    transition:
+        background-color var(--theme-transition),
+        border-color var(--theme-transition);
 }
 
 .score-item {
@@ -289,6 +374,7 @@ button {
     color: var(--color-cyan);
     min-width: 2ch;
     text-align: center;
+    transition: color var(--theme-transition);
 }
 
 .score-divider {
@@ -481,6 +567,10 @@ button {
         0 0 20px var(--color-cyan-glow),
         inset 0 0 20px rgba(0, 255, 255, 0.05);
     position: relative;
+    transition:
+        background-color var(--theme-transition),
+        border-color var(--theme-transition),
+        box-shadow var(--theme-transition);
 }
 
 .cell {
@@ -493,7 +583,7 @@ button {
     font-size: var(--font-size-mark);
     font-weight: 700;
     transition:
-        background-color var(--transition-fast),
+        background-color var(--theme-transition),
         box-shadow var(--transition-fast);
     position: relative;
 }
@@ -823,7 +913,11 @@ button {
     max-width: 90vw;
     width: 320px;
     transform: scale(0.9);
-    transition: transform var(--transition-slow);
+    transition:
+        transform var(--transition-slow),
+        background-color var(--theme-transition),
+        border-color var(--theme-transition),
+        box-shadow var(--theme-transition);
     box-shadow:
         0 0 30px var(--color-cyan-glow),
         inset 0 0 30px rgba(0, 255, 255, 0.05);
@@ -935,6 +1029,80 @@ button {
 
 .name-input:hover:not(:focus) {
     border-color: rgba(0, 255, 0, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   Theme Selector
+   -------------------------------------------------------------------------- */
+.theme-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-label {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-text-secondary);
+    transition: color var(--theme-transition);
+}
+
+.theme-buttons {
+    display: flex;
+    gap: 2px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-cyan-dim);
+    border-radius: 4px;
+    padding: 2px;
+    transition:
+        background-color var(--theme-transition),
+        border-color var(--theme-transition);
+}
+
+.theme-btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-btn);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    transition:
+        background-color var(--transition-normal),
+        color var(--transition-normal),
+        box-shadow var(--transition-normal);
+    min-height: 36px;
+    min-width: 80px;
+}
+
+.theme-btn:hover:not(.active) {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--color-text-primary);
+}
+
+.theme-btn:focus {
+    outline: none;
+}
+
+.theme-btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-cyan);
+}
+
+.theme-btn.active {
+    background: var(--color-cyan-dim);
+    color: var(--color-cyan);
+    box-shadow: 0 0 10px var(--color-cyan-glow);
+}
+
+/* Terminal theme button in terminal theme */
+:root[data-theme="terminal"] .theme-btn.active[data-theme="terminal"] {
+    background: var(--color-terminal-green-dim);
+    color: var(--color-terminal-green);
+    box-shadow: 0 0 10px var(--color-terminal-green-glow);
 }
 
 /* --------------------------------------------------------------------------
