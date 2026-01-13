@@ -189,10 +189,59 @@ TicTacToe/
 - [x] Symbol preference persists across sessions
 - [x] Tests verify all symbol assignment scenarios
 
+### Feature 7.3: Player Name and Personalization - TODO
+**Priority:** Medium
+**Description:** Allow players to set their name and display a personalized greeting. See specs/specs.md FR-9 for complete requirements.
+
+**Requirements:**
+- Add input field for player name (text input)
+- Save player name to localStorage (key: 'tictactoe_player_name')
+- Display "Hello {Name}" greeting when name is set
+- Display "Hello Player" (or similar) when no name is set
+- Allow player to change name at any time
+- Sanitize name for display to prevent XSS
+- Name appears in greeting area near title
+- Add tests for name storage and display
+
+**Acceptance Criteria:**
+- Player can enter and save their name
+- Greeting displays "Hello {Name}" when name is set
+- Greeting displays default text when no name is set
+- Name persists across browser sessions
+- Name can be changed/updated at any time
+- XSS prevention works (name is sanitized)
+- Tests verify localStorage operations and display logic
+
+### Feature 7.4: Theme Selection - TODO
+**Priority:** Medium
+**Description:** Add preferences control to select between multiple visual themes. See specs/specs.md FR-10 for complete requirements.
+
+**Requirements:**
+- Create preferences/settings UI control (button or panel)
+- Implement at least 2 themes:
+  - Default: Hacker aesthetic (current neon cyan/magenta/green)
+  - Alternate: Different color scheme (e.g., retro terminal green, blue/orange, etc.)
+- Save theme preference to localStorage (key: 'tictactoe_theme')
+- Apply theme changes immediately without page reload
+- All UI elements respect selected theme (board, buttons, modals, text)
+- Smooth CSS transitions when switching themes
+- Load saved theme preference on page load
+- Default to 'default' theme if no preference saved
+- Add tests for theme switching and persistence
+
+**Acceptance Criteria:**
+- Player can select between at least 2 different themes
+- Theme changes apply immediately to all UI elements
+- Theme transitions are smooth (CSS transitions)
+- Theme preference persists across browser sessions
+- Default theme loads correctly when no preference exists
+- All colors/styling update appropriately per theme
+- Tests verify localStorage operations and theme application
+
 ## Current Status
 - **In Progress:** None
 - **Completed:** All 6 phases (MVP complete), comprehensive tests, Feature 7.2 (Symbol Selection)
-- **Next Up:** Feature 7.1 (Easy Mode)
+- **Next Up:** Feature 7.1 (Easy Mode), Feature 7.3 (Player Name), Feature 7.4 (Theme Selection)
 - **Blocked:** None
 
 ## Discovered Issues
