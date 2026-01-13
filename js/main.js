@@ -13,6 +13,7 @@ const App = (function() {
     let difficulty = 'hard';  // 'easy' or 'hard'
     let symbolChoice = 'random';  // 'X', 'O', or 'random'
     let currentPlayerSymbol = 'X';  // The actual symbol for current game (resolved from symbolChoice)
+    let playerName = '';  // Player's display name
     let isProcessingMove = false;
 
     // AI thinking delay (ms) for natural feel
@@ -30,6 +31,7 @@ const App = (function() {
         soundEnabled = Storage.loadSoundEnabled();
         difficulty = Storage.loadDifficulty();
         symbolChoice = Storage.loadPlayerSymbol();
+        playerName = Storage.loadPlayerName();
 
         // Initialize sound system
         await Sound.init(soundEnabled);
@@ -39,6 +41,7 @@ const App = (function() {
         UI.updateSoundButton(soundEnabled);
         UI.updateDifficultyButtons(difficulty);
         UI.updateSymbolButtons(symbolChoice);
+        UI.updateGreeting(playerName);
 
         // Setup event handlers
         UI.setupEventListeners({
@@ -50,7 +53,10 @@ const App = (function() {
             onResetConfirm: handleResetConfirm,
             onResetCancel: handleResetCancel,
             onDifficultyChange: handleDifficultyChange,
-            onSymbolChange: handleSymbolChange
+            onSymbolChange: handleSymbolChange,
+            onEditNameClick: handleEditNameClick,
+            onNameSave: handleNameSave,
+            onNameCancel: handleNameCancel
         });
 
         // Set up game callbacks
@@ -320,6 +326,52 @@ const App = (function() {
         startNewGame();
     }
 
+    /**
+     * Handles edit name button click - opens the name modal
+     */
+    function handleEditNameClick() {
+        Sound.play('click');
+        // Show modal with current name pre-filled (unescaped for editing)
+        // Note: We need to unescape the stored name for editing
+        const unescapedName = playerName
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'");
+        UI.showNameModal(unescapedName);
+    }
+
+    /**
+     * Handles saving the player name from the modal
+     */
+    function handleNameSave() {
+        Sound.play('click');
+
+        // Get the raw input value
+        const rawName = UI.getNameInputValue();
+
+        // Save to storage (sanitization happens in Storage module)
+        Storage.savePlayerName(rawName);
+
+        // Reload the sanitized name
+        playerName = Storage.loadPlayerName();
+
+        // Update the greeting display
+        UI.updateGreeting(playerName);
+
+        // Close the modal
+        UI.hideNameModal();
+    }
+
+    /**
+     * Handles canceling the name modal
+     */
+    function handleNameCancel() {
+        Sound.play('click');
+        UI.hideNameModal();
+    }
+
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
@@ -334,7 +386,8 @@ const App = (function() {
         isSoundEnabled: () => soundEnabled,
         getDifficulty: () => difficulty,
         getSymbolChoice: () => symbolChoice,
-        getCurrentPlayerSymbol: () => currentPlayerSymbol
+        getCurrentPlayerSymbol: () => currentPlayerSymbol,
+        getPlayerName: () => playerName
     };
 })();
 

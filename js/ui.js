@@ -68,7 +68,17 @@ const UI = (function() {
             symbolXBtn: document.getElementById('symbol-x'),
             symbolOBtn: document.getElementById('symbol-o'),
             symbolRandomBtn: document.getElementById('symbol-random'),
-            symbolHint: document.getElementById('symbol-hint')
+            symbolHint: document.getElementById('symbol-hint'),
+
+            // Player Greeting
+            greetingText: document.getElementById('greeting-text'),
+            editNameBtn: document.getElementById('edit-name-btn'),
+
+            // Name Modal
+            nameModalOverlay: document.getElementById('name-modal-overlay'),
+            playerNameInput: document.getElementById('player-name-input'),
+            nameSaveBtn: document.getElementById('name-save-btn'),
+            nameCancelBtn: document.getElementById('name-cancel-btn')
         };
     }
 
@@ -381,6 +391,49 @@ const UI = (function() {
     }
 
     /**
+     * Updates the greeting display with the player's name.
+     * Displays "Hello, {Name}" when name is set, or "Hello, Player" when not set.
+     * @param {string} name - The player's name (already sanitized)
+     */
+    function updateGreeting(name) {
+        if (name && name.trim().length > 0) {
+            elements.greetingText.textContent = `Hello, ${name}`;
+        } else {
+            elements.greetingText.textContent = 'Hello, Player';
+        }
+    }
+
+    /**
+     * Shows the name input modal
+     * @param {string} currentName - Current player name to pre-fill the input
+     */
+    function showNameModal(currentName = '') {
+        elements.playerNameInput.value = currentName;
+        elements.nameModalOverlay.hidden = false;
+
+        // Focus the input field for accessibility
+        setTimeout(() => {
+            elements.playerNameInput.focus();
+            elements.playerNameInput.select();
+        }, 100);
+    }
+
+    /**
+     * Hides the name input modal
+     */
+    function hideNameModal() {
+        elements.nameModalOverlay.hidden = true;
+    }
+
+    /**
+     * Gets the current value from the name input field
+     * @returns {string} The raw input value
+     */
+    function getNameInputValue() {
+        return elements.playerNameInput.value;
+    }
+
+    /**
      * Resets the board display for a new game
      */
     function resetBoard() {
@@ -481,6 +534,9 @@ const UI = (function() {
                 if (!elements.resetModalOverlay.hidden && handlers.onResetCancel) {
                     handlers.onResetCancel();
                 }
+                if (!elements.nameModalOverlay.hidden && handlers.onNameCancel) {
+                    handlers.onNameCancel();
+                }
             }
         });
 
@@ -528,6 +584,45 @@ const UI = (function() {
                 handlers.onSymbolChange('random');
             }
         });
+
+        // Player name edit button
+        elements.editNameBtn.addEventListener('click', () => {
+            if (handlers.onEditNameClick) {
+                handlers.onEditNameClick();
+            }
+        });
+
+        // Name modal buttons
+        elements.nameSaveBtn.addEventListener('click', () => {
+            if (handlers.onNameSave) {
+                handlers.onNameSave();
+            }
+        });
+
+        elements.nameCancelBtn.addEventListener('click', () => {
+            if (handlers.onNameCancel) {
+                handlers.onNameCancel();
+            }
+        });
+
+        // Name modal overlay click to close
+        elements.nameModalOverlay.addEventListener('click', (event) => {
+            if (event.target === elements.nameModalOverlay && handlers.onNameCancel) {
+                handlers.onNameCancel();
+            }
+        });
+
+        // Name input Enter key to save
+        elements.playerNameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && handlers.onNameSave) {
+                event.preventDefault();
+                handlers.onNameSave();
+            }
+            if (event.key === 'Escape' && handlers.onNameCancel) {
+                event.preventDefault();
+                handlers.onNameCancel();
+            }
+        });
     }
 
     /**
@@ -559,6 +654,10 @@ const UI = (function() {
         hideResultModal,
         showResetModal,
         hideResetModal,
+        updateGreeting,
+        showNameModal,
+        hideNameModal,
+        getNameInputValue,
         resetBoard,
         setupEventListeners,
         getElements
