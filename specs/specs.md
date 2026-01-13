@@ -82,6 +82,21 @@ A web-based TicTacToe game featuring an unbeatable AI opponent powered by the mi
 3. System updates button icon to reflect state
 4. Sound preference persists across sessions
 
+**UC-7: Set Player Name**
+1. User enters their name in the name input field
+2. System saves name to localStorage
+3. System updates greeting display to show "Hello {Name}"
+4. Name persists across sessions
+5. User can change name at any time by editing the field
+
+**UC-8: Change Theme**
+1. User opens preferences/settings
+2. User selects a different theme from available options
+3. System applies theme immediately with smooth transition
+4. All UI elements update to use new color scheme
+5. Theme preference saves to localStorage
+6. Theme persists across sessions
+
 ---
 
 ## Functional Requirements
@@ -146,6 +161,27 @@ A web-based TicTacToe game featuring an unbeatable AI opponent powered by the mi
 - **FR-8.6:** Button click sound (UI feedback)
 - **FR-8.7:** Global mute toggle
 - **FR-8.8:** Mute state persists across sessions (localStorage)
+
+### FR-9: Player Name and Personalization
+- **FR-9.1:** Input field for player to set their name
+- **FR-9.2:** Name persists across browser sessions (localStorage)
+- **FR-9.3:** Display "Hello {Name}" greeting when name is set
+- **FR-9.4:** Display generic greeting ("Hello Player" or similar) when no name is set
+- **FR-9.5:** Allow player to change their name at any time
+- **FR-9.6:** Name appears in greeting area (header or near title)
+- **FR-9.7:** Name is sanitized for display (prevent XSS)
+
+### FR-10: Theme Selection
+- **FR-10.1:** Preferences control to select between multiple visual themes
+- **FR-10.2:** At minimum, support two themes:
+  - Default: Hacker aesthetic (neon cyan/magenta/green on dark background)
+  - Alternate: Different color scheme (e.g., blue/orange, retro green terminal, etc.)
+- **FR-10.3:** Theme selection persists across browser sessions (localStorage)
+- **FR-10.4:** Theme changes apply immediately without page reload
+- **FR-10.5:** All UI elements (board, buttons, modals) respect selected theme
+- **FR-10.6:** Smooth transition when switching themes (CSS transitions)
+- **FR-10.7:** Theme preference accessible via settings/preferences UI
+- **FR-10.8:** Default theme loads if no preference is saved
 
 ---
 
@@ -246,6 +282,8 @@ TicTacToe/
   draws: 0
 }
 'tictactoe_sound_enabled': true  // boolean
+'tictactoe_player_name': ''      // string (empty if not set)
+'tictactoe_theme': 'default'     // string ('default', 'alternate', etc.)
 ```
 
 ### Minimax Algorithm
@@ -268,6 +306,7 @@ The AI uses the minimax algorithm with the following characteristics:
 ```
 +------------------------------------------+
 |           TICTACTOE                      |  <- Title with glow effect
+|          Hello {Name}                    |  <- Personalized greeting
 +------------------------------------------+
 |    Wins: 0  |  Losses: 0  |  Draws: 0   |  <- Score display
 +------------------------------------------+
@@ -283,7 +322,7 @@ The AI uses the minimax algorithm with the following characteristics:
 +------------------------------------------+
 |           YOUR TURN / AI THINKING        |  <- Turn indicator
 +------------------------------------------+
-|   [NEW GAME]    [RESET]    [SOUND]      |  <- Control buttons
+| [NEW GAME] [RESET] [SOUND] [SETTINGS]   |  <- Control buttons
 +------------------------------------------+
 ```
 
@@ -484,7 +523,6 @@ The following features are explicitly NOT included in this project:
 
 - Online multiplayer functionality
 - User accounts or authentication
-- Difficulty level selection (AI is always unbeatable)
 - Undo/redo functionality
 - Move history or game replay
 - Alternative board sizes (e.g., 4x4, 5x5)
@@ -494,6 +532,7 @@ The following features are explicitly NOT included in this project:
 - Backend server or database
 - Progressive Web App features
 - Internationalization/localization
+- Player avatars or profile pictures
 
 ---
 
@@ -507,11 +546,12 @@ The following features are explicitly NOT included in this project:
 ### Future Enhancements (Post-MVP)
 These could be considered for future versions but are not part of initial scope:
 - PWA support for offline play
-- Difficulty levels (easy, medium, hard)
 - Human vs Human local mode
 - Game statistics (average game length, etc.)
-- Themes/skins selection
+- Additional themes beyond the initial two
 - Tutorial mode for new players
+- Animated player avatars
+- Sound effect customization
 
 ---
 
